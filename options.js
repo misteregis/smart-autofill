@@ -3,6 +3,98 @@ let autofillData = {};
 let siteLinks = {};
 let autoFillSettings = {};
 
+// Função para mostrar modal de alerta customizado
+function showAlert(message, title = "Aviso", icon = "fa-info-circle", type = "info") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("alert-modal");
+    const titleElement = document.getElementById("alert-title");
+    const messageElement = document.getElementById("alert-message");
+    const iconElement = document.getElementById("alert-icon");
+    const headerElement = document.getElementById("alert-header");
+    const okBtn = document.getElementById("alert-ok");
+
+    titleElement.textContent = title;
+    messageElement.textContent = message;
+    iconElement.className = `fas ${icon} text-white text-xl`;
+
+    // Definir cores baseado no tipo
+    const colors = {
+      info: "from-blue-500 to-blue-600",
+      warning: "from-yellow-500 to-yellow-600",
+      error: "from-red-500 to-red-600",
+      success: "from-green-500 to-green-600"
+    };
+    headerElement.className = `bg-gradient-to-r ${colors[type] || colors.info} px-6 py-5 flex items-center gap-3`;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+
+    const handleOk = () => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      okBtn.removeEventListener("click", handleOk);
+      document.removeEventListener("keydown", handleEscape);
+      resolve();
+    };
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape" || e.key === "Enter") {
+        handleOk();
+      }
+    };
+
+    okBtn.addEventListener("click", handleOk);
+    document.addEventListener("keydown", handleEscape);
+  });
+}
+
+// Função para mostrar modal de confirmação customizado
+function showConfirm(message, title = "Confirmar ação", icon = "fa-exclamation-triangle") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirm-modal");
+    const titleElement = document.getElementById("confirm-title");
+    const messageElement = document.getElementById("confirm-message");
+    const iconElement = document.getElementById("confirm-icon");
+    const okBtn = document.getElementById("confirm-ok");
+    const cancelBtn = document.getElementById("confirm-cancel");
+
+    titleElement.textContent = title;
+    messageElement.textContent = message;
+    iconElement.className = `fas ${icon} text-white text-xl`;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+
+    const handleOk = () => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      okBtn.removeEventListener("click", handleOk);
+      cancelBtn.removeEventListener("click", handleCancel);
+      document.removeEventListener("keydown", handleEscape);
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      okBtn.removeEventListener("click", handleOk);
+      cancelBtn.removeEventListener("click", handleCancel);
+      document.removeEventListener("keydown", handleEscape);
+      resolve(false);
+    };
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        handleCancel();
+      }
+    };
+
+    okBtn.addEventListener("click", handleOk);
+    cancelBtn.addEventListener("click", handleCancel);
+    document.addEventListener("keydown", handleEscape);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   renderSitesList();
@@ -13,19 +105,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   const linkSitesBtn = document.getElementById('link-sites-btn');
   const addLinkBtn = document.getElementById('add-link-btn');
 
+  const closeLinkModal = () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  };
+
   linkSitesBtn.addEventListener('click', () => {
     showLinkModal();
   });
 
-  closeBtn.addEventListener('click', () => {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  });
+  closeBtn.addEventListener('click', closeLinkModal);
 
   window.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      closeLinkModal();
+    }
+  });
+
+  // Fechar modal com ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('flex')) {
+      closeLinkModal();
     }
   });
 
@@ -105,7 +205,7 @@ function renderProfiles() {
         const settingKey = `${currentSite}_${profileIndex}`;
     const isAutoFill = autoFillSettings[settingKey] || false;
     return `
-    <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden" data-profile="${profileIndex}">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden" data-profile="${profileIndex}">
       <div class="bg-gradient-to-r from-white to-slate-50 px-6 py-4 flex justify-between items-center border-b border-slate-200">
         <div class="flex items-center gap-3">
           <div class="bg-blue-600 p-2 rounded-lg">
@@ -285,7 +385,8 @@ async function deleteField(e) {
     return;
   }
 
-  if (confirm(`Excluir o campo "${fieldName}"?`)) {
+  const confirmed = await showConfirm(`Excluir o campo "${fieldName}"?`, "Excluir campo", "fa-trash");
+  if (confirmed) {
     delete autofillData[currentSite][profileIndex].fields[fieldName];
     await browser.storage.local.set({ autofillData });
     renderProfiles();
@@ -314,7 +415,7 @@ async function addField(e) {
   const fieldValue = valueInput.value.trim();
 
   if (!fieldName) {
-    alert('Digite o nome do campo');
+    await showAlert('Digite o nome do campo', 'Campo obrigatório', 'fa-exclamation-circle', 'warning');
     return;
   }
 
@@ -351,7 +452,8 @@ async function deleteProfile(e) {
 
   const profileName = autofillData[currentSite][profileIndex].name;
 
-  if (confirm(`Excluir o perfil "${profileName}"?`)) {
+  const confirmed = await showConfirm(`Excluir o perfil "${profileName}"?`, "Excluir perfil", "fa-trash");
+  if (confirmed) {
     autofillData[currentSite].splice(profileIndex, 1);
 
     // Limpar e reorganizar as configurações de auto-fill para este site
@@ -427,7 +529,7 @@ async function addLinkedSite() {
   const url = input.value.trim();
 
   if (!url) {
-    alert('Digite uma URL válida');
+    await showAlert('Digite uma URL válida', 'URL necessária', 'fa-exclamation-circle', 'warning');
     return;
   }
 
@@ -436,7 +538,7 @@ async function addLinkedSite() {
     const origin = urlObj.origin;
 
     if (origin === currentSite) {
-      alert('Não é possível vincular o site a ele mesmo');
+      await showAlert('Não é possível vincular o site a ele mesmo', 'Operação inválida', 'fa-ban', 'error');
       return;
     }
 
@@ -445,7 +547,7 @@ async function addLinkedSite() {
     }
 
     if (siteLinks[currentSite].includes(origin)) {
-      alert('Este site já está vinculado');
+      await showAlert('Este site já está vinculado', 'Site duplicado', 'fa-exclamation-circle', 'warning');
       return;
     }
 
@@ -455,14 +557,15 @@ async function addLinkedSite() {
     input.value = '';
     renderLinkedSites();
   } catch (error) {
-    alert('URL inválida');
+    await showAlert('URL inválida', 'Erro de validação', 'fa-times-circle', 'error');
   }
 }
 
 async function removeLinkedSite(e) {
   const site = e.currentTarget.dataset.site;
 
-  if (confirm(`Remover vínculo com ${site}?`)) {
+  const confirmed = await showConfirm(`Remover vínculo com ${site}?`, "Remover vínculo", "fa-unlink");
+  if (confirmed) {
     siteLinks[currentSite] = siteLinks[currentSite].filter(s => s !== site);
 
     if (siteLinks[currentSite].length === 0) {

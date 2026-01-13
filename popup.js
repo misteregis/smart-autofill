@@ -38,7 +38,7 @@ async function loadProfiles() {
 
   if (siteData.length === 0) {
     profilesList.innerHTML = `
-      <div class="text-center py-8 bg-white rounded-xl shadow-sm border border-slate-200 mx-2">
+      <div class="text-center py-8 bg-white rounded-xl shadow-sm mx-2">
         <i class="fas fa-clipboard text-4xl text-slate-300 mb-3"></i>
         <p class="text-slate-500 text-sm">Nenhum preenchimento salvo para este site</p>
       </div>
@@ -147,7 +147,7 @@ function showMessage(text, type) {
   const iconColor = isSuccess ? 'text-green-600' : 'text-red-600';
 
   messageEl.innerHTML = `
-    <div class="${bgColor} ${textColor} ${borderColor} border-l-4 rounded-lg p-4 shadow-md flex items-center gap-3">
+    <div class="${bgColor} ${textColor} ${borderColor} border-l-4 rounded-lg p-4 shadow-sm flex items-center gap-3">
       <i class="fas ${icon} ${iconColor} text-xl"></i>
       <span class="font-medium">${text}</span>
     </div>
