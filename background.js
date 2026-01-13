@@ -78,6 +78,8 @@ async function loadData() {
 
 async function updateMenusForUrl(url) {
   if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+    // Limpar badge se não for uma URL válida
+    await browser.browserAction.setBadgeText({ text: '' });
     return;
   }
 
@@ -103,6 +105,15 @@ async function updateMenusForUrl(url) {
       if (linkedSites && linkedSites.includes(origin) && autofillData[primarySite]) {
         profiles = [...profiles, ...autofillData[primarySite]];
       }
+    }
+
+    // Atualizar badge com número de perfis
+    const profileCount = profiles.length;
+    if (profileCount > 0) {
+      await browser.browserAction.setBadgeText({ text: profileCount.toString() });
+      await browser.browserAction.setBadgeBackgroundColor({ color: '#2563eb' });
+    } else {
+      await browser.browserAction.setBadgeText({ text: '' });
     }
 
     // Se houver perfis, adicionar separador e listar
