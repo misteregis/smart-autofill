@@ -1,0 +1,59 @@
+<! DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Autofill - Configurações</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚙️ Smart Autofill - Configurações</h1>
+    </header>
+
+    <div class="main-content">
+      <aside class="sidebar">
+        <h3>Sites Salvos</h3>
+        <div id="sitesList" class="sites-list"></div>
+      </aside>
+
+      <main class="content">
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h2>Selecione um site</h2>
+          <p>Escolha um site da lista ao lado para gerenciar os preenchimentos</p>
+        </div>
+
+        <div id="siteDetails" class="site-details" style="display: none;">
+          <div class="site-header">
+            <h2 id="siteName"></h2>
+            <button id="linkSitesBtn" class="btn btn-link">🔗 Vincular a Outros Sites</button>
+          </div>
+
+          <div id="profilesContainer"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal para vincular sites -->
+    <div id="linkModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Vincular Sites</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>Adicione URLs de sites/páginas que devem usar os mesmos preenchimentos: </p>
+          <div id="linkedSites"></div>
+          <div class="add-link">
+            <input type="text" id="newLinkUrl" placeholder="https://exemplo.com">
+            <button id="addLinkBtn" class="btn btn-primary">Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
