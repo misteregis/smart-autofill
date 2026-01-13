@@ -14,7 +14,7 @@ function showAlert(message, title = "Aviso", icon = "fa-info-circle", type = "in
     const okBtn = document.getElementById("alert-ok");
 
     titleElement.textContent = title;
-    messageElement.textContent = message;
+    messageElement.innerHTML = message.replace(/\n/g, '<br>');
     iconElement.className = `fas ${icon} text-white text-xl`;
 
     // Definir cores baseado no tipo
@@ -109,6 +109,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('show-notifications').addEventListener('change', async (e) => {
     await browser.storage.local.set({ showNotifications: e.target.checked });
   });
+
+  // Exportar/Importar dados
+  document.getElementById('export-data-btn').addEventListener('click', exportData);
+  document.getElementById('import-data-btn').addEventListener('click', () => {
+    document.getElementById('import-file-input').click();
+  });
+  document.getElementById('import-file-input').addEventListener('change', importData);
 
   // Modal controls
   const modal = document.getElementById('link-modal');
@@ -585,5 +592,86 @@ async function removeLinkedSite(e) {
 
     await browser.storage.local.set({ siteLinks });
     renderLinkedSites();
+  }
+}
+
+// Exportar dados
+async function exportData() {
+  try {
+    const data = await browser.storage.local.get(['autofillData', 'siteLinks', 'autoFillSettings', 'showNotifications']);
+
+    const exportObj = {
+      version: "1.0.0",
+      exportDate: new Date().toISOString(),
+      data: {
+        autofillData: data.autofillData || {},
+        siteLinks: data.siteLinks || {},
+        autoFillSettings: data.autoFillSettings || {},
+        showNotifications: data.showNotifications
+      }
+    };
+
+    const jsonString = JSON.stringify(exportObj, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `smart-autofill-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    await showAlert(`Dados exportados com sucesso!\n<span class="font-semibold">${a.download}</span>`, 'Exportação concluída', 'fa-check-circle', 'success');
+  } catch (error) {
+    console.error('Erro ao exportar dados:', error);
+    await showAlert('Erro ao exportar dados', 'Erro', 'fa-times-circle', 'error');
+  }
+}
+
+// Importar dados
+async function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const importObj = JSON.parse(text);
+
+    // Validar estrutura
+    if (!importObj.data) {
+      throw new Error('Formato de arquivo inválido');
+    }
+
+    const confirmed = await showConfirm(
+      'Isso substituirá todos os seus dados atuais. Deseja continuar?',
+      'Confirmar importação',
+      'fa-exclamation-triangle'
+    );
+
+    if (!confirmed) {
+      e.target.value = '';
+      return;
+    }
+
+    // Importar dados
+    await browser.storage.local.set({
+      autofillData: importObj.data.autofillData || {},
+      siteLinks: importObj.data.siteLinks || {},
+      autoFillSettings: importObj.data.autoFillSettings || {},
+      showNotifications: importObj.data.showNotifications
+    });
+
+    // Recarregar dados
+    await loadData();
+    renderSitesList();
+
+    await showAlert('Dados importados com sucesso!', 'Importação concluída', 'fa-check-circle', 'success');
+  } catch (error) {
+    console.error('Erro ao importar dados:', error);
+    await showAlert('Erro ao importar dados. Verifique se o arquivo é válido.', 'Erro', 'fa-times-circle', 'error');
+  } finally {
+    e.target.value = '';
   }
 }
