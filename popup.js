@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Get current tab URL
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   currentUrl = new URL(tabs[0].url).origin;
-currentUrl = 'http://localhost';
+
   document.getElementById('currentSite').textContent = `Site atual: ${currentUrl}`;
 
   loadProfiles();

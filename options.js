@@ -100,13 +100,13 @@ function renderProfiles() {
     const isAutoFill = autoFillSettings[settingKey] || false;
     return `
     <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden" data-profile="${profileIndex}">
-      <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 flex justify-between items-center border-b border-slate-200">
+      <div class="bg-gradient-to-r from-white to-slate-50 px-6 py-4 flex justify-between items-center border-b border-slate-200">
         <div class="flex items-center gap-3">
           <div class="bg-blue-600 p-2 rounded-lg">
             <i class="fas fa-user text-white"></i>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-slate-800">${profile.name}</h3>
+            <h3 class="text-lg font-semibold text-slate-800">${profile.name}</h3>
             <label class="flex items-center gap-2 mt-2 cursor-pointer group">
               <input type="checkbox" class="auto-fill-checkbox w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer" data-profile="${profileIndex}" ${isAutoFill ? 'checked' : ''}>
               <span class="text-sm text-slate-600 group-hover:text-blue-600 transition-colors">
@@ -122,21 +122,32 @@ function renderProfiles() {
       </div>
 
       <div class="p-6 space-y-3" data-profile="${profileIndex}">
-        ${Object.entries(profile.fields).map(([fieldName, fieldValue]) => `
+        ${Object.entries(profile.fields).map(([fieldName, fieldValue]) => {
+          const isPasswordField = /password|senha|pass|pwd/i.test(fieldName);
+          const inputType = isPasswordField ? 'password' : 'text';
+          return `
           <div class="grid grid-cols-[200px_1fr_auto] gap-3 items-center bg-slate-50 p-3 rounded-lg" data-field="${fieldName}">
             <div class="flex items-center gap-2 font-medium text-slate-700">
               <i class="fas fa-tag text-slate-400 text-sm"></i>
               <span class="truncate">${fieldName}</span>
             </div>
-            <input type="text" class="field-value px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" value="${fieldValue}" data-field="${fieldName}" data-profile="${profileIndex}">
+            <div class="relative flex-1">
+              <input type="${inputType}" class="field-value w-full px-4 py-2 ${isPasswordField ? 'pr-10' : ''} border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" value="${fieldValue}" data-field="${fieldName}" data-profile="${profileIndex}">
+              ${isPasswordField ? `
+              <button type="button" class="toggle-password absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors w-7 p-1" data-field="${fieldName}" data-profile="${profileIndex}">
+                <i class="fas fa-eye"></i>
+              </button>
+              ` : ''}
+            </div>
             <button class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors duration-200 delete-field w-10" data-field="${fieldName}" data-profile="${profileIndex}">
               <i class="fas fa-times"></i>
             </button>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
 
-      <div class="bg-slate-50 px-6 py-4 border-t border-slate-200">
+      <div class="bg-white px-6 py-4 border-t border-slate-200">
         <div class="grid grid-cols-[200px_1fr_auto] gap-3">
           <input type="text" class="new-field-name px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="Nome do campo" data-profile="${profileIndex}">
           <input type="text" class="new-field-value px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="Valor do campo" data-profile="${profileIndex}">
@@ -153,6 +164,11 @@ function renderProfiles() {
   // Event listeners para auto-fill checkbox
   document.querySelectorAll('.auto-fill-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', toggleAutoFill);
+  });
+
+  // Event listeners para toggle de visualização de senha
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', togglePasswordVisibility);
   });
 
   // Event listeners para alteração de valores
@@ -176,6 +192,26 @@ function renderProfiles() {
   });
 }
 
+function togglePasswordVisibility(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const button = e.currentTarget;
+  const icon = button.querySelector('i');
+  const container = button.closest('.relative');
+  const input = container.querySelector('.field-value');
+
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
 async function toggleAutoFill(e) {
   const profileIndex = parseInt(e.currentTarget.dataset.profile);
 
@@ -186,7 +222,7 @@ async function toggleAutoFill(e) {
 
   const settingKey = `${currentSite}_${profileIndex}`;
 
-  if (e.target.checked) {
+  if (e.currentTarget.checked) {
     // Desmarcar todos os outros checkboxes do mesmo site
     const profiles = autofillData[currentSite] || [];
     profiles.forEach((_, idx) => {
@@ -258,7 +294,8 @@ async function addField(e) {
     return;
   }
 
-  const card = e.currentTarget.closest('[data-profile]');
+  const card = e.currentTarget.closest('div[data-profile]');
+
   if (!card) {
     console.error('Card do perfil não encontrado');
     return;
@@ -369,7 +406,7 @@ function renderLinkedSites() {
         <i class="fas fa-link text-blue-600"></i>
         <span class="font-medium">${site}</span>
       </div>
-      <button class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors duration-200 remove-link" data-site="${site}">
+      <button class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors duration-200 w-10 remove-link" data-site="${site}">
         <i class="fas fa-times"></i>
       </button>
     </div>
@@ -418,7 +455,7 @@ async function addLinkedSite() {
 }
 
 async function removeLinkedSite(e) {
-  const site = e.target.dataset.site;
+  const site = e.currentTarget.dataset.site;
 
   if (confirm(`Remover vínculo com ${site}?`)) {
     siteLinks[currentSite] = siteLinks[currentSite].filter(s => s !== site);
