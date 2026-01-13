@@ -1,16 +1,17 @@
 let currentUrl = '';
+let messageTimeout = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Get current tab URL
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   currentUrl = new URL(tabs[0].url).origin;
-currentUrl = 'https://ecidade.niteroi.rj.gov.br';
-  document.getElementById('currentSite').textContent = `Site atual: ${currentUrl}`;
+
+  document.getElementById('current-site').textContent = `Site atual: ${currentUrl}`;
 
   loadProfiles();
 
-  document.getElementById('captureBtn').addEventListener('click', captureForm);
-  document.getElementById('optionsBtn').addEventListener('click', () => {
+  document.getElementById('capture-btn').addEventListener('click', captureForm);
+  document.getElementById('options-btn').addEventListener('click', () => {
     browser.runtime.openOptionsPage();
   });
 });
@@ -33,7 +34,7 @@ async function loadProfiles() {
     }
   }
 
-  const profilesList = document.getElementById('profilesList');
+  const profilesList = document.getElementById('profiles-list');
 
   if (siteData.length === 0) {
     profilesList.innerHTML = `
@@ -153,7 +154,8 @@ function showMessage(text, type) {
   `;
   messageEl.classList.remove('hidden');
 
-  setTimeout(() => {
+  clearTimeout(messageTimeout);
+  messageTimeout = setTimeout(() => {
     messageEl.classList.add('hidden');
   }, 3000);
 }

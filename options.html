@@ -32,13 +32,13 @@
           <i class="fas fa-globe text-blue-600"></i>
           <h3 class="text-lg font-semibold text-slate-800">Sites Salvos</h3>
         </div>
-        <div id="sitesList" class="space-y-2"></div>
+        <div id="sites-list" class="space-y-2"></div>
       </aside>
 
       <!-- Content Area -->
       <main class="scrollbar-thin overflow-auto flex-1 max-h-[calc(100vh-104px)] p-8">
         <!-- Empty State -->
-        <div id="emptyState" class="text-center py-20">
+        <div id="empty-state" class="text-center py-20">
           <div class="inline-flex items-center justify-center w-24 h-24 bg-slate-100 rounded-full mb-6">
             <i class="fas fa-clipboard-list text-4xl text-slate-300"></i>
           </div>
@@ -47,27 +47,27 @@
         </div>
 
         <!-- Site Details -->
-        <div id="siteDetails" style="display: none;">
+        <div id="site-details" style="display: none;">
           <div class="flex justify-between items-center mb-8">
             <div class="flex items-center gap-3">
               <div class="bg-blue-100 p-3 rounded-lg">
                 <i class="fas fa-link text-blue-600 text-xl"></i>
               </div>
-              <h2 id="siteName" class="text-2xl font-semibold text-slate-800"></h2>
+              <h2 id="site-name" class="text-2xl font-semibold text-slate-800"></h2>
             </div>
-            <button id="linkSitesBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+            <button id="link-sites-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
               <i class="fas fa-link"></i>
               <span>Vincular Sites</span>
             </button>
           </div>
 
-          <div id="profilesContainer" class="space-y-5"></div>
+          <div id="profiles-container" class="space-y-5"></div>
         </div>
       </main>
     </div>
 
     <!-- Modal -->
-    <div id="linkModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div id="link-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
       <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 flex justify-between items-center">
           <div class="flex items-center gap-3">
@@ -85,13 +85,13 @@
               <span>Adicione URLs de sites ou páginas que devem compartilhar os mesmos preenchimentos salvos</span>
             </p>
           </div>
-          <div id="linkedSites" class="space-y-2 mb-6"></div>
+          <div id="linked-sites" class="space-y-2 mb-6"></div>
           <div class="flex gap-3">
             <div class="flex-1 relative">
               <i class="fas fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-              <input type="text" id="newLinkUrl" placeholder="https://exemplo.com" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+              <input type="text" id="new-link-url" placeholder="https://exemplo.com" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
             </div>
-            <button id="addLinkBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 whitespace-nowrap">
+            <button id="add-link-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 whitespace-nowrap">
               <i class="fas fa-plus"></i>
               <span>Adicionar</span>
             </button>

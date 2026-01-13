@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderSitesList();
 
   // Modal controls
-  const modal = document.getElementById('linkModal');
+  const modal = document.getElementById('link-modal');
   const closeBtn = document.querySelector('.close');
-  const linkSitesBtn = document.getElementById('linkSitesBtn');
-  const addLinkBtn = document.getElementById('addLinkBtn');
+  const linkSitesBtn = document.getElementById('link-sites-btn');
+  const addLinkBtn = document.getElementById('add-link-btn');
 
   linkSitesBtn.addEventListener('click', () => {
     showLinkModal();
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   addLinkBtn.addEventListener('click', addLinkedSite);
 
-  document.getElementById('newLinkUrl').addEventListener('keypress', (e) => {
+  document.getElementById('new-link-url').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       addLinkedSite();
     }
@@ -46,7 +46,7 @@ async function loadData() {
 }
 
 function renderSitesList() {
-  const sitesList = document.getElementById('sitesList');
+  const sitesList = document.getElementById('sites-list');
   const sites = Object.keys(autofillData);
 
   if (sites.length === 0) {
@@ -68,28 +68,34 @@ function renderSitesList() {
     </div>
   `).join('');
 
-  document.querySelectorAll('.site-item-card').forEach(item => {
-    item.addEventListener('click', () => {
-      document.querySelectorAll('.site-item-card').forEach(i => {
-        i.classList.remove('!bg-blue-100', '!border-blue-600');
-      });
-      item.classList.add('!bg-blue-100', '!border-blue-600');
-      selectSite(item.dataset.site);
-    });
+  document.querySelectorAll('.site-item-card').forEach((item) => {
+    item.addEventListener('click', () => selectSite(item.dataset.site));
   });
+
+  selectSite();
 }
 
-function selectSite(site) {
+function selectSite(site = currentSite) {
+  if (!site) {
+    return;
+  }
+
   currentSite = site;
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('siteDetails').style.display = 'block';
-  document.getElementById('siteName').textContent = site;
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('site-details').style.display = 'block';
+  document.getElementById('site-name').textContent = site;
+
+  const item = document.querySelector(`[data-site="${site}"]`);
+  document.querySelectorAll('.site-item-card').forEach((i) => {
+    i.classList.remove('!bg-blue-100', '!border-blue-600', 'active');
+  });
+  item.classList.add('!bg-blue-100', '!border-blue-600', 'active');
 
   renderProfiles();
 }
 
 function renderProfiles() {
-  const container = document.getElementById('profilesContainer');
+  const container = document.getElementById('profiles-container');
   const profiles = autofillData[currentSite] || [];
 
   container.innerHTML = profiles.map((profile, profileIndex) => {    // Validar se o perfil existe
@@ -374,25 +380,24 @@ async function deleteProfile(e) {
 
     await browser.storage.local.set({ autofillData, autoFillSettings });
 
-    if (autofillData[currentSite]) {
-      renderProfiles();
-    } else {
-      renderSitesList();
-      document.getElementById('siteDetails').style.display = 'none';
-      document.getElementById('emptyState').style.display = 'block';
+    if (!autofillData[currentSite]) {
+      document.getElementById('site-details').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'block';
     }
+
+    renderSitesList();
   }
 }
 
 function showLinkModal() {
-  const modal = document.getElementById('linkModal');
+  const modal = document.getElementById('link-modal');
   modal.classList.remove('hidden');
   modal.classList.add('flex');
   renderLinkedSites();
 }
 
 function renderLinkedSites() {
-  const container = document.getElementById('linkedSites');
+  const container = document.getElementById('linked-sites');
   const linkedSites = siteLinks[currentSite] || [];
 
   if (linkedSites.length === 0) {
@@ -418,7 +423,7 @@ function renderLinkedSites() {
 }
 
 async function addLinkedSite() {
-  const input = document.getElementById('newLinkUrl');
+  const input = document.getElementById('new-link-url');
   const url = input.value.trim();
 
   if (!url) {
