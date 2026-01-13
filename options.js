@@ -99,6 +99,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   renderSitesList();
 
+  // Carregar preferência de notificações
+  const notifSettings = await browser.storage.local.get('showNotifications');
+  const showNotifications = notifSettings.showNotifications !== false; // Default: true
+
+  document.getElementById('show-notifications').checked = showNotifications;
+
+  // Listener para mudança na configuração de notificações
+  document.getElementById('show-notifications').addEventListener('change', async (e) => {
+    await browser.storage.local.set({ showNotifications: e.target.checked });
+  });
+
   // Modal controls
   const modal = document.getElementById('link-modal');
   const closeBtn = document.querySelector('.close');
