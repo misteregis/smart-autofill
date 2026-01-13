@@ -3,6 +3,7 @@
   "name": "Smart Autofill",
   "version": "1.0.0",
   "description": "Extensão de autopreenchimento inteligente de formulários",
+  "content_security_policy": "script-src 'self' https://cdnjs.cloudflare.com; object-src 'self'",
   "permissions": [
     "storage",
     "activeTab",

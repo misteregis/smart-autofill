@@ -23,7 +23,7 @@ function captureFormData() {
   inputs.forEach(input => {
     let identifier = input.name || input.id || input.placeholder || input.type;
 
-    if (! identifier || identifier === 'submit' || identifier === 'button') {
+    if (!identifier || identifier === 'submit' || identifier === 'button') {
       return;
     }
 

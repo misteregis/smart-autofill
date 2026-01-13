@@ -1,28 +1,44 @@
-<! DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Smart Autofill</title>
-  <link rel="stylesheet" href="popup. css">
+  <script src="tailwind.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body>
-  <div class="container">
-    <h2>Smart Autofill</h2>
-    <div id="currentSite" class="site-info"></div>
-    
-    <div id="profilesList" class="profiles-list"></div>
-    
-    <div class="actions">
-      <button id="captureBtn" class="btn btn-primary">
-        <span>➕</span> Capturar Novo Preenchimento
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen overflow-x-hidden">
+  <div class="w-[400px] p-4">
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-6 mx-2">
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
+        <i class="fas fa-magic text-white text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">Smart Autofill</h2>
+        <p class="text-xs text-slate-500">Preencha formulários automaticamente</p>
+      </div>
+    </div>
+
+    <!-- Current Site Info -->
+    <div id="currentSite" class="bg-white border-l-4 border-blue-500 rounded-lg shadow-sm p-4 mb-4 text-sm text-slate-600 mx-2"></div>
+
+    <!-- Profiles List -->
+    <div id="profilesList" class="space-y-2 mb-4 max-h-[300px] overflow-y-auto"></div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col gap-3 mx-2">
+      <button id="captureBtn" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group">
+        <i class="fas fa-plus-circle group-hover:scale-110 transition-transform"></i>
+        <span>Capturar Novo Preenchimento</span>
       </button>
-      <button id="optionsBtn" class="btn btn-secondary">
-        <span>⚙️</span> Configurações
+      <button id="optionsBtn" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group">
+        <i class="fas fa-cog group-hover:rotate-90 transition-transform duration-300"></i>
+        <span>Configurações</span>
       </button>
     </div>
-    
-    <div id="message" class="message"></div>
-  </div>
+
+    <!-- Message -->
+    <div id="message" class="mt-4 hidden"></div>
   <script src="popup.js"></script>
 </body>
 </html>
