@@ -92,8 +92,11 @@ function renderProfiles() {
   const container = document.getElementById('profilesContainer');
   const profiles = autofillData[currentSite] || [];
 
-  container.innerHTML = profiles.map((profile, profileIndex) => {
-    const settingKey = `${currentSite}_${profileIndex}`;
+  container.innerHTML = profiles.map((profile, profileIndex) => {    // Validar se o perfil existe
+    if (!profile || !profile.fields) {
+      return '';
+    }
+        const settingKey = `${currentSite}_${profileIndex}`;
     const isAutoFill = autoFillSettings[settingKey] || false;
     return `
     <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden" data-profile="${profileIndex}">
@@ -145,7 +148,7 @@ function renderProfiles() {
       </div>
     </div>
   `;
-  }).join('');
+  }).filter((html) => html !== '').join('');
 
   // Event listeners para auto-fill checkbox
   document.querySelectorAll('.auto-fill-checkbox').forEach(checkbox => {
@@ -174,7 +177,13 @@ function renderProfiles() {
 }
 
 async function toggleAutoFill(e) {
-  const profileIndex = parseInt(e.target.dataset.profile);
+  const profileIndex = parseInt(e.currentTarget.dataset.profile);
+
+  if (isNaN(profileIndex)) {
+    console.error('Índice de perfil inválido');
+    return;
+  }
+
   const settingKey = `${currentSite}_${profileIndex}`;
 
   if (e.target.checked) {
@@ -198,17 +207,41 @@ async function toggleAutoFill(e) {
 }
 
 async function updateFieldValue(e) {
-  const profileIndex = parseInt(e.target.dataset.profile);
-  const fieldName = e.target.dataset.field;
-  const newValue = e.target.value;
+  const profileIndex = parseInt(e.currentTarget.dataset.profile);
+  const fieldName = e.currentTarget.dataset.field;
+  const newValue = e.currentTarget.value;
+
+  if (isNaN(profileIndex)) {
+    console.error('Índice de perfil inválido');
+    return;
+  }
+
+  if (!autofillData[currentSite] || !autofillData[currentSite][profileIndex]) {
+    console.error('Perfil não encontrado:', currentSite, profileIndex);
+    await loadData();
+    renderProfiles();
+    return;
+  }
 
   autofillData[currentSite][profileIndex].fields[fieldName] = newValue;
   await browser.storage.local.set({ autofillData });
 }
 
 async function deleteField(e) {
-  const profileIndex = parseInt(e.target.dataset.profile);
-  const fieldName = e.target.dataset.field;
+  const profileIndex = parseInt(e.currentTarget.dataset.profile);
+  const fieldName = e.currentTarget.dataset.field;
+
+  if (isNaN(profileIndex)) {
+    console.error('Índice de perfil inválido');
+    return;
+  }
+
+  if (!autofillData[currentSite] || !autofillData[currentSite][profileIndex]) {
+    console.error('Perfil não encontrado:', currentSite, profileIndex);
+    await loadData();
+    renderProfiles();
+    return;
+  }
 
   if (confirm(`Excluir o campo "${fieldName}"?`)) {
     delete autofillData[currentSite][profileIndex].fields[fieldName];
@@ -218,8 +251,19 @@ async function deleteField(e) {
 }
 
 async function addField(e) {
-  const profileIndex = parseInt(e.target.dataset.profile);
-  const card = e.target.closest('.profile-card');
+  const profileIndex = parseInt(e.currentTarget.dataset.profile);
+
+  if (isNaN(profileIndex)) {
+    console.error('Índice de perfil inválido');
+    return;
+  }
+
+  const card = e.currentTarget.closest('[data-profile]');
+  if (!card) {
+    console.error('Card do perfil não encontrado');
+    return;
+  }
+
   const nameInput = card.querySelector('.new-field-name');
   const valueInput = card.querySelector('.new-field-value');
 
@@ -228,6 +272,13 @@ async function addField(e) {
 
   if (!fieldName) {
     alert('Digite o nome do campo');
+    return;
+  }
+
+  if (!autofillData[currentSite] || !autofillData[currentSite][profileIndex]) {
+    console.error('Perfil não encontrado:', currentSite, profileIndex);
+    await loadData();
+    renderProfiles();
     return;
   }
 
@@ -240,17 +291,51 @@ async function addField(e) {
 }
 
 async function deleteProfile(e) {
-  const profileIndex = parseInt(e.target.dataset.profile);
+  const profileIndex = parseInt(e.currentTarget.dataset.profile);
+
+  if (isNaN(profileIndex)) {
+    console.error('Índice de perfil inválido');
+    return;
+  }
+
+  // Validar se o perfil existe
+  if (!autofillData[currentSite] || !autofillData[currentSite][profileIndex]) {
+    console.error('Perfil não encontrado:', currentSite, profileIndex);
+    await loadData(); // Recarregar dados
+    renderProfiles(); // Re-renderizar
+    return;
+  }
+
   const profileName = autofillData[currentSite][profileIndex].name;
 
   if (confirm(`Excluir o perfil "${profileName}"?`)) {
     autofillData[currentSite].splice(profileIndex, 1);
 
+    // Limpar e reorganizar as configurações de auto-fill para este site
+    const oldSettings = {};
+    Object.keys(autoFillSettings).forEach(key => {
+      if (key.startsWith(`${currentSite}_`)) {
+        const idx = parseInt(key.split('_').pop());
+        if (idx > profileIndex) {
+          // Decrementar o índice dos perfis que vêm depois
+          oldSettings[`${currentSite}_${idx - 1}`] = autoFillSettings[key];
+        } else if (idx < profileIndex) {
+          // Manter os perfis anteriores
+          oldSettings[key] = autoFillSettings[key];
+        }
+        // Remover o perfil excluído (idx === profileIndex)
+        delete autoFillSettings[key];
+      } else {
+        oldSettings[key] = autoFillSettings[key];
+      }
+    });
+    Object.assign(autoFillSettings, oldSettings);
+
     if (autofillData[currentSite].length === 0) {
       delete autofillData[currentSite];
     }
 
-    await browser.storage.local.set({ autofillData });
+    await browser.storage.local.set({ autofillData, autoFillSettings });
 
     if (autofillData[currentSite]) {
       renderProfiles();
