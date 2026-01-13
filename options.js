@@ -163,6 +163,7 @@ async function loadData() {
   autoFillSettings = data.autoFillSettings || {};
 }
 
+const profileText = (profiles) => profiles.length === 1 ? 'perfil' : 'perfis';
 function renderSitesList() {
   const sitesList = document.getElementById('sites-list');
   const sites = Object.keys(autofillData);
@@ -172,14 +173,14 @@ function renderSitesList() {
     return;
   }
 
-  sitesList.innerHTML = sites.map(site => `
+  sitesList.innerHTML = sites.map((site) => `
     <div class="site-item-card group cursor-pointer bg-slate-50 hover:bg-blue-50 border-l-4 border-transparent hover:border-blue-600 rounded-lg p-3 transition-all duration-200" data-site="${site}">
       <div class="flex items-start gap-2">
         <i class="fas fa-globe text-slate-400 group-hover:text-blue-600 mt-1 transition-colors"></i>
         <div class="flex-1 min-w-0">
           <div class="text-sm font-medium text-slate-700 group-hover:text-blue-600 truncate transition-colors">${site}</div>
           <div class="text-xs text-slate-500 mt-1">
-            <i class="fas fa-users mr-1"></i>${autofillData[site].length} perfil(is)
+            <i class="fas fa-users mr-1"></i>${autofillData[site].length} ${profileText(autofillData[site])}
           </div>
         </div>
       </div>
@@ -286,32 +287,32 @@ function renderProfiles() {
   }).filter((html) => html !== '').join('');
 
   // Event listeners para auto-fill checkbox
-  document.querySelectorAll('.auto-fill-checkbox').forEach(checkbox => {
+  document.querySelectorAll('.auto-fill-checkbox').forEach((checkbox) => {
     checkbox.addEventListener('change', toggleAutoFill);
   });
 
   // Event listeners para toggle de visualização de senha
-  document.querySelectorAll('.toggle-password').forEach(btn => {
+  document.querySelectorAll('.toggle-password').forEach((btn) => {
     btn.addEventListener('click', togglePasswordVisibility);
   });
 
   // Event listeners para alteração de valores
-  document.querySelectorAll('.field-value').forEach(input => {
+  document.querySelectorAll('.field-value').forEach((input) => {
     input.addEventListener('change', updateFieldValue);
   });
 
   // Event listeners para exclusão de campos
-  document.querySelectorAll('.delete-field').forEach(btn => {
+  document.querySelectorAll('.delete-field').forEach((btn) => {
     btn.addEventListener('click', deleteField);
   });
 
   // Event listeners para adicionar campos
-  document.querySelectorAll('.add-field-btn').forEach(btn => {
+  document.querySelectorAll('.add-field-btn').forEach((btn) => {
     btn.addEventListener('click', addField);
   });
 
   // Event listeners para excluir perfil
-  document.querySelectorAll('.delete-profile').forEach(btn => {
+  document.querySelectorAll('.delete-profile').forEach((btn) => {
     btn.addEventListener('click', deleteProfile);
   });
 }
@@ -476,7 +477,7 @@ async function deleteProfile(e) {
 
     // Limpar e reorganizar as configurações de auto-fill para este site
     const oldSettings = {};
-    Object.keys(autoFillSettings).forEach(key => {
+    Object.keys(autoFillSettings).forEach((key) => {
       if (key.startsWith(`${currentSite}_`)) {
         const idx = parseInt(key.split('_').pop());
         if (idx > profileIndex) {
@@ -525,7 +526,7 @@ function renderLinkedSites() {
     return;
   }
 
-  container.innerHTML = linkedSites.map(site => `
+  container.innerHTML = linkedSites.map((site) => `
     <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
       <div class="flex items-center gap-2 text-slate-700">
         <i class="fas fa-link text-blue-600"></i>
@@ -537,7 +538,7 @@ function renderLinkedSites() {
     </div>
   `).join('');
 
-  document.querySelectorAll('.remove-link').forEach(btn => {
+  document.querySelectorAll('.remove-link').forEach((btn) => {
     btn.addEventListener('click', removeLinkedSite);
   });
 }
@@ -584,7 +585,7 @@ async function removeLinkedSite(e) {
 
   const confirmed = await showConfirm(`Remover vínculo com ${site}?`, "Remover vínculo", "fa-unlink");
   if (confirmed) {
-    siteLinks[currentSite] = siteLinks[currentSite].filter(s => s !== site);
+    siteLinks[currentSite] = siteLinks[currentSite].filter((s) => s !== site);
 
     if (siteLinks[currentSite].length === 0) {
       delete siteLinks[currentSite];

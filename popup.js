@@ -65,7 +65,7 @@ async function loadProfiles() {
     </div>
   `).join('');
 
-  document.querySelectorAll('.profile-card-item').forEach(item => {
+  document.querySelectorAll('.profile-card-item').forEach((item) => {
     item.addEventListener('click', () => fillForm(parseInt(item.dataset.index)));
   });
 }

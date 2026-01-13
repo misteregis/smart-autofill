@@ -66,7 +66,7 @@ function captureFormData() {
   // Capturar inputs, textareas e selects
   const inputs = document.querySelectorAll('input:not([type="submit"]):not([type="button"]):not([type="image"]), textarea, select');
 
-  inputs.forEach(input => {
+  inputs.forEach((input) => {
     let identifier = input.name || input.id || input.placeholder || input.type;
 
     if (!identifier || identifier === 'submit' || identifier === 'button') {
@@ -123,7 +123,7 @@ function fillFormData(fields) {
       if (element.type === 'checkbox' || element.type === 'radio') {
         element.checked = value === element.value;
       } else if (element.tagName === 'SELECT') {
-        Array.from(element.options).forEach(option => {
+        Array.from(element.options).forEach((option) => {
           if (option.value === value) {
             option.selected = true;
           }

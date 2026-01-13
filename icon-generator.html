@@ -14,7 +14,7 @@
           <i class="fas fa-image text-white text-3xl"></i>
         </div>
         <div>
-          <h2 class="text-3xl font-semibold text-slate-800">Gerador de Ícones</h2>
+          <h2 class="text-3xl font-semibold text-slate-800">Gerador de ícones</h2>
           <p class="text-slate-500">Criando ícones PNG para a extensão...</p>
         </div>
       </div>
@@ -29,7 +29,7 @@
   <script>
     const sizes = [16, 32, 48, 96, 512];
 
-    sizes.forEach(size => {
+    sizes.forEach((size) => {
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
@@ -65,7 +65,7 @@
       ctx.lineCap = 'round';
 
       const lineY = [0.35, 0.46, 0.56, 0.67];
-      lineY.forEach(y => {
+      lineY.forEach((y) => {
         ctx.beginPath();
         ctx.moveTo(size * 0.29, size * y);
         ctx.lineTo(size * 0.7, size * y);
