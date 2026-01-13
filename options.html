@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <title>Smart Autofill - Configurações</title>
   <script src="tailwind.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="scroll.css">
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-slate-100">
+<body class="overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
   <div class="min-h-screen">
     <!-- Header -->
     <header class="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg">
@@ -26,7 +27,7 @@
     <!-- Main Content -->
     <div class="flex max-w-7xl mx-auto">
       <!-- Sidebar -->
-      <aside class="w-80 bg-white border-r border-slate-200 min-h-[calc(100vh-96px)] p-6">
+      <aside class="w-80 bg-white border-r border-slate-200 min-h-[calc(100vh-104px)] p-6">
         <div class="flex items-center gap-2 mb-6">
           <i class="fas fa-globe text-blue-600"></i>
           <h3 class="text-lg font-semibold text-slate-800">Sites Salvos</h3>
@@ -35,7 +36,7 @@
       </aside>
 
       <!-- Content Area -->
-      <main class="flex-1 p-8">
+      <main class="scrollbar-thin overflow-auto flex-1 max-h-[calc(100vh-104px)] p-8">
         <!-- Empty State -->
         <div id="emptyState" class="text-center py-20">
           <div class="inline-flex items-center justify-center w-24 h-24 bg-slate-100 rounded-full mb-6">

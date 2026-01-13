@@ -5,9 +5,13 @@
   <title>Smart Autofill</title>
   <script src="tailwind.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="scroll.css">
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen overflow-x-hidden">
+<body class="scrollbar-thin bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen overflow-x-hidden">
   <div class="w-[400px] p-4">
+    <!-- Message -->
+    <div id="message" class="absolute left-6 max-w-88 hidden"></div>
+
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6 mx-2">
       <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
@@ -23,7 +27,7 @@
     <div id="currentSite" class="bg-white border-l-4 border-blue-500 rounded-lg shadow-sm p-4 mb-4 text-sm text-slate-600 mx-2"></div>
 
     <!-- Profiles List -->
-    <div id="profilesList" class="space-y-2 mb-4 max-h-[300px] overflow-y-auto"></div>
+    <div id="profilesList" class="scrollbar-thin space-y-2 mb-4 max-h-[300px] overflow-y-auto py-3"></div>
 
     <!-- Action Buttons -->
     <div class="flex flex-col gap-3 mx-2">
@@ -36,9 +40,6 @@
         <span>Configurações</span>
       </button>
     </div>
-
-    <!-- Message -->
-    <div id="message" class="mt-4 hidden"></div>
   <script src="popup.js"></script>
 </body>
 </html>

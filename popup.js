@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Get current tab URL
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   currentUrl = new URL(tabs[0].url).origin;
-
+currentUrl = 'https://ecidade.niteroi.rj.gov.br';
   document.getElementById('currentSite').textContent = `Site atual: ${currentUrl}`;
 
   loadProfiles();
@@ -37,7 +37,7 @@ async function loadProfiles() {
 
   if (siteData.length === 0) {
     profilesList.innerHTML = `
-      <div class="text-center py-8 bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="text-center py-8 bg-white rounded-xl shadow-sm border border-slate-200 mx-2">
         <i class="fas fa-clipboard text-4xl text-slate-300 mb-3"></i>
         <p class="text-slate-500 text-sm">Nenhum preenchimento salvo para este site</p>
       </div>
