@@ -1,6 +1,7 @@
 let currentSite = null;
 let autofillData = {};
 let siteLinks = {};
+let autoFillSettings = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
@@ -38,9 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadData() {
-  const data = await browser.storage.local.get(['autofillData', 'siteLinks']);
+  const data = await browser.storage.local.get(['autofillData', 'siteLinks', 'autoFillSettings']);
   autofillData = data.autofillData || {};
   siteLinks = data.siteLinks || {};
+  autoFillSettings = data.autoFillSettings || {};
 }
 
 function renderSitesList() {
@@ -90,14 +92,25 @@ function renderProfiles() {
   const container = document.getElementById('profilesContainer');
   const profiles = autofillData[currentSite] || [];
 
-  container.innerHTML = profiles.map((profile, profileIndex) => `
+  container.innerHTML = profiles.map((profile, profileIndex) => {
+    const settingKey = `${currentSite}_${profileIndex}`;
+    const isAutoFill = autoFillSettings[settingKey] || false;
+    return `
     <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden" data-profile="${profileIndex}">
       <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 flex justify-between items-center border-b border-slate-200">
         <div class="flex items-center gap-3">
           <div class="bg-blue-600 p-2 rounded-lg">
             <i class="fas fa-user text-white"></i>
           </div>
-          <h3 class="text-lg font-bold text-slate-800">${profile.name}</h3>
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">${profile.name}</h3>
+            <label class="flex items-center gap-2 mt-2 cursor-pointer group">
+              <input type="checkbox" class="auto-fill-checkbox w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer" data-profile="${profileIndex}" ${isAutoFill ? 'checked' : ''}>
+              <span class="text-sm text-slate-600 group-hover:text-blue-600 transition-colors">
+                <i class="fas fa-bolt text-xs"></i> Preencher automaticamente ao carregar
+              </span>
+            </label>
+          </div>
         </div>
         <button class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 delete-profile" data-profile="${profileIndex}">
           <i class="fas fa-trash"></i>
@@ -131,7 +144,13 @@ function renderProfiles() {
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+
+  // Event listeners para auto-fill checkbox
+  document.querySelectorAll('.auto-fill-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', toggleAutoFill);
+  });
 
   // Event listeners para alteração de valores
   document.querySelectorAll('.field-value').forEach(input => {
@@ -152,6 +171,30 @@ function renderProfiles() {
   document.querySelectorAll('.delete-profile').forEach(btn => {
     btn.addEventListener('click', deleteProfile);
   });
+}
+
+async function toggleAutoFill(e) {
+  const profileIndex = parseInt(e.target.dataset.profile);
+  const settingKey = `${currentSite}_${profileIndex}`;
+
+  if (e.target.checked) {
+    // Desmarcar todos os outros checkboxes do mesmo site
+    const profiles = autofillData[currentSite] || [];
+    profiles.forEach((_, idx) => {
+      const key = `${currentSite}_${idx}`;
+      if (idx !== profileIndex) {
+        delete autoFillSettings[key];
+      }
+    });
+
+    // Marcar o atual
+    autoFillSettings[settingKey] = true;
+  } else {
+    delete autoFillSettings[settingKey];
+  }
+
+  await browser.storage.local.set({ autoFillSettings });
+  renderProfiles(); // Re-renderizar para atualizar os checkboxes
 }
 
 async function updateFieldValue(e) {

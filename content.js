@@ -1,5 +1,51 @@
 // Content script para capturar e preencher formulários
 
+// Preenchimento automático ao carregar a página
+(async function autoFill() {
+  const currentOrigin = window.location.origin;
+  const data = await browser.storage.local.get(['autofillData', 'siteLinks', 'autoFillSettings']);
+  const autofillData = data.autofillData || {};
+  const siteLinks = data.siteLinks || {};
+  const autoFillSettings = data.autoFillSettings || {};
+
+  // Verificar se há perfil com auto-fill ativado para este site
+  let siteData = autofillData[currentOrigin] || [];
+  let autoFillProfile = null;
+
+  // Buscar no site atual
+  for (let i = 0; i < siteData.length; i++) {
+    const settingKey = `${currentOrigin}_${i}`;
+    if (autoFillSettings[settingKey]) {
+      autoFillProfile = siteData[i];
+      break;
+    }
+  }
+
+  // Se não encontrou, verificar sites vinculados
+  if (!autoFillProfile) {
+    for (const [primarySite, linkedSites] of Object.entries(siteLinks)) {
+      if (linkedSites.includes(currentOrigin) && autofillData[primarySite]) {
+        const linkedData = autofillData[primarySite];
+        for (let i = 0; i < linkedData.length; i++) {
+          const settingKey = `${primarySite}_${i}`;
+          if (autoFillSettings[settingKey]) {
+            autoFillProfile = linkedData[i];
+            break;
+          }
+        }
+        if (autoFillProfile) break;
+      }
+    }
+  }
+
+  // Se encontrou um perfil com auto-fill ativado, preencher após um pequeno delay
+  if (autoFillProfile) {
+    setTimeout(() => {
+      fillFormData(autoFillProfile.fields);
+    }, 500);
+  }
+})();
+
 browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'capture') {
     const fields = captureFormData();
