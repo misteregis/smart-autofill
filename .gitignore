@@ -1,0 +1,19 @@
+# Ignore directory except .gitkeep
+dist/*
+!dist/.gitkeep
+web-ext-artifacts/*
+!web-ext-artifacts/.gitkeep
+
+# Node modules
+node_modules/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

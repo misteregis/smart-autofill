@@ -1,0 +1,46 @@
+{
+  "name": "smart-autofill",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/background.js",
+  "scripts": {
+    "postbuild": "node postbuild.js",
+    "build": "node build.js && tsc && pnpm postbuild --verbose && pnpm build:css",
+    "build:css": "pnpm build:style && pnpm build:tailwind",
+    "build:style": "npx sass src/styles.scss:dist/styles.css --no-source-map --style=compressed",
+    "build:tailwind": "npx tailwindcss -i src/tailwind.css -o dist/tailwind.css --minify",
+    "watch": "tsc-watch --onSuccess \"pnpm postbuild\"",
+    "lint": "biome check src",
+    "lint:css": "stylelint '**/*.{css,scss}' --fix",
+    "lint:fix": "biome check --write src",
+    "format": "biome format --write src",
+    "check": "biome check --write src",
+    "web:build": "pnpm build && web-ext build --source-dir=dist --overwrite-dest --artifacts-dir=web-ext-artifacts",
+    "web:run": "web-ext run --watch-files --source-dir=dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/misteregis/smart-autofill.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/misteregis/smart-autofill/issues"
+  },
+  "homepage": "https://github.com/misteregis/smart-autofill#readme",
+  "devDependencies": {
+    "@biomejs/biome": "2.3.11",
+    "@tailwindcss/cli": "^4.1.18",
+    "@types/firefox-webext-browser": "^143.0.0",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "sass": "^1.97.2",
+    "stylelint": "^17.0.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "tailwindcss": "^4.1.18",
+    "tsc-watch": "^7.2.0",
+    "web-ext": "^9.2.0"
+  }
+}
