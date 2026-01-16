@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    "Instrument Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+  --breakpoint-xs: 36rem;
+  --container-8xl: 92rem;
+  --container-9xl: 100rem;
+  --container-10xl: 112rem;
+  --container-11xl: 125rem;
+  --container-12xl: 140rem;
+}

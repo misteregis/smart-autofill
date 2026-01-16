@@ -13,7 +13,9 @@
     "<all_urls>"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
   "browser_action": {
     "default_popup": "popup.html",
@@ -29,8 +31,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js":  ["content.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ]
     }
   ],
   "icons": {
