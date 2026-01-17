@@ -3,7 +3,7 @@
   "name": "Smart Autofill",
   "version": "1.0.0",
   "description": "Extensão de autopreenchimento inteligente de formulários",
-  "content_security_policy": "script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; object-src 'self'",
+  "content_security_policy": "script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'self'",
   "permissions": [
     "storage",
     "activeTab",
@@ -12,6 +12,16 @@
     "notifications",
     "<all_urls>"
   ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "smart-autofill@misteregis.github",
+      "data_collection_permissions": {
+        "required": [
+          "websiteActivity"
+        ]
+      }
+    }
+  },
   "background": {
     "scripts": [
       "background.js"
