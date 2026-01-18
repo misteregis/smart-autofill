@@ -48,3 +48,27 @@ export interface ExportData {
     showNotifications?: boolean;
   };
 }
+
+export type EventKey = "enter";
+export type ModalType = "danger" | "info" | "success" | "warning";
+export type IconType =
+  | "ban"
+  | "bolt"
+  | "check-circle"
+  | "exclamation-circle"
+  | "exclamation-triangle"
+  | "eye"
+  | "eye-slash"
+  | "globe"
+  | "inbox"
+  | "info-circle"
+  | "link"
+  | "plus"
+  | "tag"
+  | "times"
+  | "times-circle"
+  | "trash"
+  | "unknown"
+  | "unlink"
+  | "user"
+  | "users";
