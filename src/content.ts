@@ -53,7 +53,7 @@ browser.runtime.onMessage.addListener((message: Message, _sender, sendResponse) 
     const fields = captureFormData();
     sendResponse({
       fields: fields,
-      url: window.location.href,
+      url: window.location.href
     });
   } else if (message.action === "fill") {
     fillFormData(message.fields);
@@ -67,7 +67,7 @@ function captureFormData(): Record<string, string> {
 
   // Capturar inputs, textareas e selects
   const inputs = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-    'input:not([type="submit"]):not([type="button"]):not([type="image"]), textarea, select',
+    'input:not([type="submit"]):not([type="button"]):not([type="image"]), textarea, select'
   );
 
   inputs.forEach((input) => {
@@ -113,27 +113,27 @@ function fillFormData(fields: Record<string, string>): void {
 
     // Tentar por name
     element = document.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-      `${tagName}[name="${attr}"]`,
+      `${tagName}[name="${attr}"]`
     );
 
     // Tentar por id
     if (!element) {
       element = document.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-        `${tagName}[id="${attr}"]`,
+        `${tagName}[id="${attr}"]`
       );
     }
 
     // Tentar por placeholder
     if (!element) {
       element = document.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-        `${tagName}[placeholder="${attr}"]`,
+        `${tagName}[placeholder="${attr}"]`
       );
     }
 
     // Tentar por type
     if (!element) {
       element = document.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-        `${tagName}[type="${attr}"]`,
+        `${tagName}[type="${attr}"]`
       );
     }
 

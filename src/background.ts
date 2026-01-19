@@ -23,7 +23,7 @@ loadData();
 browser.contextMenus.create({
   id: "smart-autofill-main",
   title: "Smart Autofill",
-  contexts: ["editable"],
+  contexts: ["editable"]
 });
 
 // Criar submenu para novo perfil
@@ -31,13 +31,14 @@ browser.contextMenus.create({
   id: "create-new-profile",
   parentId: "smart-autofill-main",
   title: "➕ Criar novo perfil",
-  contexts: ["editable"],
+  contexts: ["editable"]
 });
 
 // Listener para quando a aba é atualizada ou ativada
 browser.tabs.onActivated.addListener(async (activeInfo) => {
   const tab = await browser.tabs.get(activeInfo.tabId);
-  if (tab.url) {
+
+  if (tab.url?.startsWith("http")) {
     await updateMenusForUrl(tab.url);
   }
 });
@@ -45,6 +46,23 @@ browser.tabs.onActivated.addListener(async (activeInfo) => {
 browser.tabs.onUpdated.addListener(async (_tabId, changeInfo, _tab) => {
   if (changeInfo.url) {
     await updateMenusForUrl(changeInfo.url);
+  }
+});
+
+// Listener para quando o foco da janela muda
+browser.windows.onFocusChanged.addListener(async (windowId) => {
+  if (windowId === browser.windows.WINDOW_ID_NONE) {
+    return;
+  }
+
+  try {
+    const tabs = await browser.tabs.query({ active: true, windowId: windowId });
+
+    if (tabs.length > 0 && tabs[0].url?.startsWith("http")) {
+      await updateMenusForUrl(tabs[0].url);
+    }
+  } catch (error) {
+    console.error("Erro ao atualizar badge no foco da janela:", error);
   }
 });
 
@@ -117,7 +135,7 @@ async function updateMenusForUrl(url: string): Promise<void> {
     const profileCount = profiles.length;
     if (profileCount > 0) {
       await browser.browserAction.setBadgeText({
-        text: profileCount.toString(),
+        text: profileCount.toString()
       });
       await browser.browserAction.setBadgeBackgroundColor({ color: "#2563eb" });
     } else {
@@ -130,7 +148,7 @@ async function updateMenusForUrl(url: string): Promise<void> {
         id: "profile-separator",
         parentId: "smart-autofill-main",
         type: "separator",
-        contexts: ["editable"],
+        contexts: ["editable"]
       });
       profileMenuIds.push("profile-separator");
 
@@ -141,7 +159,7 @@ async function updateMenusForUrl(url: string): Promise<void> {
           id: menuId,
           parentId: "smart-autofill-main",
           title: `📝 ${profile.name}`,
-          contexts: ["editable"],
+          contexts: ["editable"]
         });
         profileMenuIds.push(menuId);
       }
@@ -158,7 +176,7 @@ async function captureAndCreateProfile(tab: browser.tabs.Tab): Promise<void> {
     }
 
     const response = await browser.tabs.sendMessage(tab.id, {
-      action: "capture",
+      action: "capture"
     });
     const fields = response.fields;
     const url = new URL(tab.url).origin;
@@ -168,19 +186,13 @@ async function captureAndCreateProfile(tab: browser.tabs.Tab): Promise<void> {
         type: "basic",
         iconUrl: "icons/icon-48.png",
         title: "Smart Autofill",
-        message: "Nenhum campo encontrado na página!",
+        message: "Nenhum campo encontrado na página!"
       });
       return;
     }
 
     // Criar nome para o perfil
-    const timestamp = new Date().toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const profileName = `Perfil ${timestamp}`;
+    const profileName = `Perfil ${new Date().toLocaleString("pt-BR")}`;
 
     // Salvar perfil
     if (!autofillData[url]) {
@@ -190,7 +202,7 @@ async function captureAndCreateProfile(tab: browser.tabs.Tab): Promise<void> {
     autofillData[url].push({
       name: profileName,
       fields: fields,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     });
 
     await browser.storage.local.set({ autofillData });
@@ -200,7 +212,7 @@ async function captureAndCreateProfile(tab: browser.tabs.Tab): Promise<void> {
       type: "basic",
       iconUrl: "icons/icon-48.png",
       title: "Smart Autofill",
-      message: `Perfil "${profileName}" criado com sucesso!`,
+      message: `Perfil "${profileName}" criado com sucesso!`
     });
   } catch (error) {
     console.error("Erro ao capturar formulário:", error);
@@ -208,7 +220,7 @@ async function captureAndCreateProfile(tab: browser.tabs.Tab): Promise<void> {
       type: "basic",
       iconUrl: "icons/icon-48.png",
       title: "Smart Autofill - Erro",
-      message: "Erro ao capturar formulário. Verifique se a página tem campos preenchidos.",
+      message: "Erro ao capturar formulário. Verifique se a página tem campos preenchidos."
     });
   }
 }
@@ -239,7 +251,7 @@ async function fillProfile(tab: browser.tabs.Tab, profileIndex: number): Promise
 
     await browser.tabs.sendMessage(tab.id, {
       action: "fill",
-      fields: profile.fields,
+      fields: profile.fields
     });
 
     // Notificar usuário
@@ -247,7 +259,7 @@ async function fillProfile(tab: browser.tabs.Tab, profileIndex: number): Promise
       type: "basic",
       iconUrl: "icons/icon-48.png",
       title: "Smart Autofill",
-      message: `Formulário preenchido com "${profile.name}"`,
+      message: `Formulário preenchido com "${profile.name}"`
     });
   } catch (error) {
     console.error("Erro ao preencher formulário:", error);
@@ -255,7 +267,7 @@ async function fillProfile(tab: browser.tabs.Tab, profileIndex: number): Promise
       type: "basic",
       iconUrl: "icons/icon-48.png",
       title: "Smart Autofill - Erro",
-      message: "Erro ao preencher formulário.",
+      message: "Erro ao preencher formulário."
     });
   }
 }

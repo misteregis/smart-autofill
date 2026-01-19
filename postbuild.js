@@ -21,8 +21,9 @@ function cleanJsFiles(dir) {
       // Remover linhas problemáticas
       content = content.replace(/"use strict";\n/g, "");
       content = content.replace(/Object\.defineProperty\(exports, "__esModule", \{ value: true \}\);\n/g, "");
-      content = content.replace(/\nexport \{\};\n/g, "");
-      content = content.replace(/export \{\};\n$/g, "");
+      content = content.replace(/import.*from.*;\n/g, "");
+      content = content.replace(/\nexport default.*/g, "");
+      content = content.replace(/\nexport((\s+)?)\{.*\};?/g, "");
       content = content.replace(/\n(?:(\s+)?)\/\/ biome-ignore.*\n/g, "\n");
       content = content.replace(/(?:(\s+)?)\/\/ .*\n/g, "\n"); // remover todos os comentários de linha
       fs.writeFileSync(fullPath, content, "utf8");

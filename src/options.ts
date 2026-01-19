@@ -1,4 +1,16 @@
-import type { AutoFillSettings, AutofillData, AutofillProfile, ExportData, SiteLinks } from "./types/index.d.ts";
+import ToastService from "./services/toast-service.js";
+import type {
+  AutoFillSettings,
+  AutofillData,
+  AutofillProfile,
+  ExportData,
+  IconType,
+  ModalType,
+  SiteLinks
+} from "./types/index.d.ts";
+import { enterKeyListener } from "./utils/key-event-util.js";
+import { createElementsFromString } from "./utils/strings-util.js";
+import { createSvg } from "./utils/svg-util.js";
 
 let currentSite: string | null = null;
 
@@ -6,33 +18,72 @@ let autofillData: AutofillData = {};
 let siteLinks: SiteLinks = {};
 let autoFillSettings: AutoFillSettings = {};
 
-// Função para mostrar modal de alerta customizado
-function showAlert(message: string, title = "Aviso", icon = "fa-info-circle", type = "info"): Promise<void> {
-  return new Promise((resolve) => {
-    const modal = document.getElementById("alert-modal");
-    const titleElement = document.getElementById("alert-title");
-    const messageElement = document.getElementById("alert-message");
-    const iconElement = document.getElementById("alert-icon");
-    const headerElement = document.getElementById("alert-header");
-    const okBtn = document.getElementById("alert-ok");
+const emptyState = document.getElementById("empty-state");
+const siteDetails = document.getElementById("site-details");
+const iconClasses = ["size-5", "flex-1", "text-white"];
+const icons: Record<IconType, SVGElement> = {
+  "check-circle": createSvg("check-circle", iconClasses, [640, 640]),
+  "exclamation-circle": createSvg("exclamation-circle", iconClasses, [640, 640]),
+  "exclamation-triangle": createSvg("exclamation-triangle", iconClasses, [640, 640]),
+  "eye-slash": createSvg("eye-slash", ["w-4.5", "h-4"], [640, 640]),
+  "info-circle": createSvg("info-circle", iconClasses),
+  "times-circle": createSvg("times-circle", iconClasses, [640, 640]),
+  ban: createSvg("ban", iconClasses, [640, 640]),
+  bolt: createSvg("bolt", "size-3", [640, 640]),
+  eye: createSvg("eye", ["w-4.5", "h-4"], [640, 640]),
+  globe: createSvg("globe", ["text-slate-400", "group-hover:text-blue-600", "mt-1", "transition-colors"]),
+  inbox: createSvg("inbox", "size-3.75", [640, 640]),
+  link: createSvg("link", ["text-blue-600", "w-4.5", "h-4"], [640, 640]),
+  plus: createSvg("plus", [], [640, 640]),
+  tag: createSvg("tag", "size-3.5 text-slate-400", [640, 640]),
+  times: createSvg("times", [], [640, 640]),
+  trash: createSvg("trash", "size-4", [640, 640]),
+  unknown: createSvg("unknown", iconClasses),
+  unlink: createSvg("unlink", iconClasses, [640, 640]),
+  user: createSvg("user", "size-5 text-white"),
+  users: createSvg("users", "size-3.75", [640, 512])
+};
 
-    if (!(modal && titleElement && messageElement && iconElement && headerElement && okBtn)) {
-      resolve();
+function showModal(
+  id: string,
+  message: string,
+  title = "Aviso",
+  icon: IconType = "info-circle",
+  type: ModalType = "info"
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById(`${id}-modal`);
+    const headerElement = document.getElementById(`${id}-header`);
+    const titleElement = document.getElementById(`${id}-title`);
+    const messageElement = document.getElementById(`${id}-message`);
+    const okBtn = document.getElementById(`${id}-ok`);
+    const iconElement = document.getElementById(`${id}-icon`);
+    const cancelBtn = document.getElementById(`${id}-cancel`);
+    const hasCancel = id === "confirm" && cancelBtn;
+
+    if (!(modal && titleElement && messageElement && okBtn)) {
+      resolve(!hasCancel);
       return;
     }
 
     titleElement.textContent = title;
-    messageElement.innerHTML = message.replace(/\n/g, "<br>");
-    iconElement.className = `fas ${icon} text-white text-xl`;
+    messageElement.textContent = "";
+    messageElement.appendChild(createElementsFromString(message));
 
-    // Definir cores baseado no tipo
-    const colors: Record<string, string> = {
-      info: "from-blue-500 to-blue-600",
-      warning: "from-yellow-500 to-yellow-600",
-      error: "from-red-500 to-red-600",
-      success: "from-green-500 to-green-600",
-    };
-    headerElement.className = `bg-gradient-to-r ${colors[type] || colors.info} px-6 py-5 flex items-center gap-3`;
+    const newIcon = (icons[icon as keyof typeof icons] || icons.unknown).cloneNode(true);
+    iconElement?.firstElementChild?.replaceWith(newIcon);
+
+    if (headerElement) {
+      // Definir cores baseado no tipo
+      const colors: Record<string, string> = {
+        danger: "from-red-500 to-red-600",
+        info: "from-blue-500 to-blue-600",
+        success: "from-green-500 to-green-600",
+        warning: "from-yellow-500 to-yellow-600"
+      };
+
+      headerElement.className = `bg-gradient-to-r ${colors[type] || colors.info} px-6 py-5 flex items-center gap-3`;
+    }
 
     modal.classList.remove("hidden");
     modal.classList.add("flex");
@@ -42,8 +93,21 @@ function showAlert(message: string, title = "Aviso", icon = "fa-info-circle", ty
       modal.classList.remove("flex");
       okBtn.removeEventListener("click", handleOk);
       document.removeEventListener("keydown", handleEscape);
-      resolve();
+      resolve(true);
     };
+
+    if (cancelBtn) {
+      const handleCancel = (): void => {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        okBtn.removeEventListener("click", handleOk);
+        cancelBtn.removeEventListener("click", handleCancel);
+        document.removeEventListener("keydown", handleEscape);
+        resolve(false);
+      };
+
+      cancelBtn.addEventListener("click", handleCancel);
+    }
 
     const handleEscape = (e: KeyboardEvent): void => {
       if (e.key === "Escape" || e.key === "Enter") {
@@ -52,65 +116,35 @@ function showAlert(message: string, title = "Aviso", icon = "fa-info-circle", ty
     };
 
     okBtn.addEventListener("click", handleOk);
+
+    setTimeout(() => okBtn.focus(), 100);
+
     document.addEventListener("keydown", handleEscape);
   });
 }
 
+// Função para mostrar modal de alerta customizado
+function showAlert(
+  message: string,
+  title = "Aviso",
+  icon: IconType = "info-circle",
+  type: ModalType = "info"
+): Promise<boolean> {
+  return showModal("alert", message, title, icon, type);
+}
+
 // Função para mostrar modal de confirmação customizado
-function showConfirm(message: string, title = "Confirmar ação", icon = "fa-exclamation-triangle"): Promise<boolean> {
-  return new Promise((resolve) => {
-    const modal = document.getElementById("confirm-modal");
-    const titleElement = document.getElementById("confirm-title");
-    const messageElement = document.getElementById("confirm-message");
-    const iconElement = document.getElementById("confirm-icon");
-    const okBtn = document.getElementById("confirm-ok");
-    const cancelBtn = document.getElementById("confirm-cancel");
-
-    if (!(modal && titleElement && messageElement && iconElement && okBtn && cancelBtn)) {
-      resolve(false);
-      return;
-    }
-
-    titleElement.textContent = title;
-    messageElement.textContent = message;
-    iconElement.className = `fas ${icon} text-white text-xl`;
-
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
-
-    const handleOk = (): void => {
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-      okBtn.removeEventListener("click", handleOk);
-      cancelBtn.removeEventListener("click", handleCancel);
-      document.removeEventListener("keydown", handleEscape);
-      resolve(true);
-    };
-
-    const handleCancel = (): void => {
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-      okBtn.removeEventListener("click", handleOk);
-      cancelBtn.removeEventListener("click", handleCancel);
-      document.removeEventListener("keydown", handleEscape);
-      resolve(false);
-    };
-
-    const handleEscape = (e: KeyboardEvent): void => {
-      if (e.key === "Escape") {
-        handleCancel();
-      }
-    };
-
-    okBtn.addEventListener("click", handleOk);
-    cancelBtn.addEventListener("click", handleCancel);
-    document.addEventListener("keydown", handleEscape);
-  });
+function showConfirm(
+  message: string,
+  title = "Aviso",
+  icon: IconType = "info-circle",
+  type: ModalType = "danger"
+): Promise<boolean> {
+  return showModal("confirm", message, title, icon, type);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadData();
-  renderSitesList();
 
   // Carregar preferência de notificações
   const notifSettings = await browser.storage.local.get("showNotifications");
@@ -123,7 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Listener para mudança na configuração de notificações
     showNotificationsCheckbox.addEventListener("change", async (e) => {
       await browser.storage.local.set({
-        showNotifications: (e.target as HTMLInputElement).checked,
+        showNotifications: (e.target as HTMLInputElement).checked
       });
     });
   }
@@ -172,6 +206,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     closeBtn.addEventListener("click", closeLinkModal);
   }
 
+  window.addEventListener("focus", async () => {
+    await loadData();
+
+    showSite(autofillData[currentSite || ""] !== undefined);
+  });
+
   window.addEventListener("click", (e) => {
     if (e.target === modal) {
       closeLinkModal();
@@ -190,13 +230,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const newLinkUrlInput = document.getElementById("new-link-url");
-  if (newLinkUrlInput) {
-    newLinkUrlInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        addLinkedSite();
-      }
-    });
-  }
+
+  enterKeyListener("enter", newLinkUrlInput, addLinkedSite);
 });
 
 async function loadData(): Promise<void> {
@@ -204,6 +239,9 @@ async function loadData(): Promise<void> {
   autofillData = data.autofillData || {};
   siteLinks = data.siteLinks || {};
   autoFillSettings = data.autoFillSettings || {};
+
+  renderSitesList();
+  renderProfiles();
 }
 
 const profileText = (profiles: AutofillProfile[]): string => (profiles.length === 1 ? "perfil" : "perfis");
@@ -217,39 +255,107 @@ function renderSitesList(): void {
   const sites = Object.keys(autofillData);
 
   if (sites.length === 0) {
-    sitesList.innerHTML =
-      '<p class="text-slate-400 text-sm text-center py-4"><i class="fas fa-inbox mr-2"></i>Nenhum site salvo ainda</p>';
+    sitesList.textContent = "";
+    const p = document.createElement("p");
+    p.className = "flex justify-center items-center text-slate-400 text-sm text-center space-x-2 py-4";
+    p.appendChild(icons.inbox.cloneNode(true));
+    const text = document.createElement("span");
+    text.textContent = "Nenhum site salvo ainda";
+    p.appendChild(text);
+    sitesList.appendChild(p);
     return;
   }
 
-  sitesList.innerHTML = sites
-    .map(
-      (site) => `
-    <div class="site-item-card group cursor-pointer bg-slate-50 hover:bg-blue-50 border-l-4 border-transparent hover:border-blue-600 rounded-lg p-3 transition-all duration-200" data-site="${site}">
-      <div class="flex items-start gap-2">
-        <i class="fas fa-globe text-slate-400 group-hover:text-blue-600 mt-1 transition-colors"></i>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium text-slate-700 group-hover:text-blue-600 truncate transition-colors">${site}</div>
-          <div class="text-xs text-slate-500 mt-1">
-            <i class="fas fa-users mr-1"></i>${autofillData[site].length} ${profileText(autofillData[site])}
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-    )
-    .join("");
+  sitesList.textContent = "";
+  sites.forEach((site) => {
+    const div = document.createElement("div");
+    div.className =
+      "site-item-card group cursor-pointer bg-slate-50 hover:bg-blue-50 border-l-4 border-transparent hover:border-blue-600 rounded-lg p-3 transition-all duration-200";
+    div.dataset.site = site;
+
+    const flexDiv = document.createElement("div");
+    flexDiv.className = "flex items-start gap-2";
+
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "flex-1 min-w-0";
+
+    const siteNameDiv = document.createElement("div");
+    siteNameDiv.className = "text-sm font-medium text-slate-700 group-hover:text-blue-600 truncate transition-colors";
+    siteNameDiv.textContent = site;
+
+    const statsContainer = document.createElement("div");
+    statsContainer.className = "flex justify-between items-center text-xs text-slate-500 mt-1";
+
+    const statsDiv = document.createElement("div");
+    statsDiv.className = "flex items-center text-xs text-slate-500 gap-1";
+    statsDiv.appendChild(icons.users.cloneNode(true));
+
+    const statsText = document.createElement("span");
+    statsText.textContent = `${autofillData[site].length} ${profileText(autofillData[site])}`;
+    statsDiv.appendChild(statsText);
+
+    const trashIcon = icons.trash.cloneNode(true) as SVGElement;
+    trashIcon.classList.add(
+      "!size-3.5",
+      "hidden",
+      "hover:text-red-500",
+      "group-hover:block",
+      "transition-colors",
+      "delete-site"
+    );
+
+    statsContainer.appendChild(statsDiv);
+    statsContainer.appendChild(trashIcon);
+
+    contentDiv.appendChild(siteNameDiv);
+    contentDiv.appendChild(statsContainer);
+    flexDiv.appendChild(icons.globe.cloneNode(true));
+    flexDiv.appendChild(contentDiv);
+    div.appendChild(flexDiv);
+    sitesList.appendChild(div);
+  });
 
   document.querySelectorAll(".site-item-card").forEach((item) => {
-    item.addEventListener("click", () => {
+    item.addEventListener("click", async (e) => {
       const site = (item as HTMLElement).dataset.site;
+
       if (site) {
+        if ((e.target as HTMLElement)?.closest("svg.delete-site")) {
+          const confirmed = await showConfirm(
+            `Excluir o site <b>${site}</b>? Todos os perfis salvos para este site serão removidos. Esta ação não pode ser desfeita.`,
+            "Excluir site",
+            "trash",
+            "danger"
+          );
+
+          if (confirmed) {
+            delete autofillData[site];
+            await browser.storage.local.set({ autofillData });
+            await loadData();
+
+            if (Object.keys(autofillData).length) {
+              ToastService.success(`Site <b>${site}</b> removido com sucesso.`);
+            } else {
+              ToastService.info(`Nenhum site restante. Adicione novos sites para começar a usar o Smart Autofill.`);
+            }
+
+            showSite(false);
+          }
+
+          return;
+        }
+
         selectSite(site);
       }
     });
   });
 
   selectSite();
+}
+
+function showSite(show: boolean): void {
+  if (emptyState) emptyState.style.display = show ? "none" : "block";
+  if (siteDetails) siteDetails.style.display = show ? "block" : "none";
 }
 
 function selectSite(site: string | null = currentSite): void {
@@ -259,12 +365,10 @@ function selectSite(site: string | null = currentSite): void {
 
   currentSite = site;
 
-  const emptyState = document.getElementById("empty-state");
-  const siteDetails = document.getElementById("site-details");
   const siteName = document.getElementById("site-name");
 
-  if (emptyState) emptyState.style.display = "none";
-  if (siteDetails) siteDetails.style.display = "block";
+  showSite(true);
+
   if (siteName) siteName.textContent = site;
 
   const item = document.querySelector(`[data-site="${site}"]`);
@@ -278,117 +382,179 @@ function selectSite(site: string | null = currentSite): void {
 
 function renderProfiles(): void {
   const container = document.getElementById("profiles-container");
-  if (!(container && currentSite)) {
-    return;
-  }
+
+  if (!(container && currentSite)) return;
 
   const profiles = autofillData[currentSite] || [];
 
-  container.innerHTML = profiles
-    .map((profile, profileIndex) => {
-      const settingKey = `${currentSite}_${profileIndex}`;
-      const isAutoFill = autoFillSettings[settingKey];
+  container.replaceChildren();
+  const fragment = document.createDocumentFragment();
 
-      return `
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden" data-profile="${profileIndex}">
-      <div class="bg-linear-to-r from-white to-slate-50 px-6 py-4 flex justify-between items-center border-b border-slate-200">
-        <div class="flex items-center gap-3">
-          <div class="bg-blue-600 p-2 rounded-lg">
-            <i class="fas fa-user text-white"></i>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-slate-800">${profile.name}</h3>
-            <label class="flex items-center gap-2 mt-2 cursor-pointer group">
-              <input type="checkbox" class="auto-fill-checkbox w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer" data-profile="${profileIndex}" ${isAutoFill ? "checked" : ""}>
-              <span class="text-sm text-slate-600 group-hover:text-blue-600 transition-colors">
-                <i class="fas fa-bolt text-xs"></i> Preencher automaticamente ao carregar
-              </span>
-            </label>
-          </div>
-        </div>
-        <button class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 delete-profile" data-profile="${profileIndex}">
-          <i class="fas fa-trash"></i>
-          <span>Excluir Perfil</span>
-        </button>
-      </div>
+  profiles.forEach((profile, profileIndex) => {
+    const settingKey = `${currentSite}_${profileIndex}`;
+    const isAutoFill = autoFillSettings[settingKey];
 
-      <div class="p-6 space-y-3" data-profile="${profileIndex}">
-        ${Object.entries(profile.fields)
-          .map(([fieldName, fieldValue]) => {
-            const isPasswordField = /password|senha|pass|pwd/i.test(fieldName);
-            const inputType = isPasswordField ? "password" : "text";
-            return `
-          <div class="grid grid-cols-[200px_1fr_auto] gap-3 items-center bg-slate-50 p-3 rounded-lg" data-field="${fieldName}">
-            <div class="flex items-center gap-2 font-medium text-slate-700">
-              <i class="fas fa-tag text-slate-400 text-sm"></i>
-              <span class="truncate">${fieldName}</span>
-            </div>
-            <div class="relative flex-1">
-              <input type="${inputType}" class="field-value w-full px-4 py-2 ${isPasswordField ? "pr-10" : ""} border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" value="${fieldValue}" data-field="${fieldName}" data-profile="${profileIndex}">
-              ${
-                isPasswordField
-                  ? `
-              <button type="button" class="toggle-password absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors w-7 p-1" data-field="${fieldName}" data-profile="${profileIndex}">
-                <i class="fas fa-eye"></i>
-              </button>
-              `
-                  : ""
-              }
-            </div>
-            <button class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors duration-200 delete-field w-10" data-field="${fieldName}" data-profile="${profileIndex}">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        `;
-          })
-          .join("")}
-      </div>
+    /* CARD */
+    const card = document.createElement("div");
+    card.className = "bg-white rounded-xl shadow-sm overflow-hidden";
+    card.dataset.profile = String(profileIndex);
 
-      <div class="bg-white px-6 py-4 border-t border-slate-200">
-        <div class="grid grid-cols-[200px_1fr_auto] gap-3">
-          <input type="text" class="new-field-name px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="Nome do campo" data-profile="${profileIndex}">
-          <input type="text" class="new-field-value px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="Valor do campo" data-profile="${profileIndex}">
-          <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap add-field-btn" data-profile="${profileIndex}">
-            <i class="fas fa-plus"></i>
-            <span>Adicionar</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-    })
-    .filter((html) => html !== "")
-    .join("");
+    /* HEADER */
+    const header = document.createElement("div");
+    header.className =
+      "bg-linear-to-r from-white to-slate-50 px-6 py-4 flex justify-between items-center border-b border-slate-200";
 
-  // Event listeners para auto-fill checkbox
-  document.querySelectorAll(".auto-fill-checkbox").forEach((checkbox) => {
+    const left = document.createElement("div");
+    left.className = "flex items-center gap-3";
+
+    const iconBox = document.createElement("div");
+    iconBox.className = "bg-blue-600 p-2 rounded-lg";
+    iconBox.appendChild(icons.user.cloneNode(true));
+
+    const info = document.createElement("div");
+
+    const title = document.createElement("h3");
+    title.className = "text-lg font-semibold text-slate-800";
+    title.textContent = profile.name;
+
+    const label = document.createElement("label");
+    label.className = "flex items-center gap-2 mt-2 cursor-pointer group";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = Boolean(isAutoFill);
+    checkbox.className =
+      "auto-fill-checkbox w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer";
+    checkbox.dataset.profile = String(profileIndex);
     checkbox.addEventListener("change", toggleAutoFill);
+
+    const boltIcon = icons.bolt.cloneNode(true);
+    const textFill = document.createElement("span");
+    textFill.textContent = "Ativar preenchimento automático";
+
+    const labelText = document.createElement("span");
+    labelText.className =
+      "flex items-center text-sm text-slate-600 group-hover:text-blue-600 transition-colors space-x-1";
+    labelText.append(boltIcon, textFill);
+
+    label.append(checkbox, labelText);
+    info.append(title, label);
+    left.append(iconBox, info);
+
+    const deleteProfileBtn = document.createElement("button");
+    deleteProfileBtn.className =
+      "bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 delete-profile";
+    deleteProfileBtn.dataset.profile = String(profileIndex);
+
+    const trashIcon = icons.trash.cloneNode(true);
+
+    const deleteText = document.createElement("span");
+    deleteText.textContent = "Excluir Perfil";
+
+    deleteProfileBtn.append(trashIcon, deleteText);
+    deleteProfileBtn.addEventListener("click", deleteProfile);
+
+    header.append(left, deleteProfileBtn);
+
+    /* FIELDS */
+    const fieldsWrapper = document.createElement("div");
+    fieldsWrapper.className = "p-6 space-y-3";
+    fieldsWrapper.dataset.profile = String(profileIndex);
+
+    Object.entries(profile.fields).forEach(([fieldName, fieldValue]) => {
+      const isPassword = /password|senha|pass|pwd/i.test(fieldName);
+
+      const row = document.createElement("div");
+      row.className = "grid grid-cols-[200px_1fr_auto] gap-3 items-center bg-slate-50 p-3 rounded-lg";
+      row.dataset.field = fieldName;
+
+      const labelCol = document.createElement("div");
+      labelCol.className = "flex items-center gap-2 font-medium text-slate-700";
+
+      const fieldLabel = document.createElement("span");
+      fieldLabel.className = "truncate";
+      fieldLabel.textContent = fieldName;
+
+      labelCol.append(icons.tag.cloneNode(true), fieldLabel);
+
+      const inputWrapper = document.createElement("div");
+      inputWrapper.className = "relative flex-1";
+
+      const input = document.createElement("input");
+      input.type = isPassword ? "password" : "text";
+      input.value = fieldValue;
+      input.className = `field-value w-full px-4 py-2 ${isPassword ? "pr-10" : ""} border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none`;
+      input.dataset.field = fieldName;
+      input.dataset.profile = String(profileIndex);
+      input.addEventListener("change", updateFieldValue);
+
+      inputWrapper.appendChild(input);
+
+      if (isPassword) {
+        const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.className =
+          "toggle-password absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 w-7 p-1";
+        toggleBtn.dataset.field = fieldName;
+        toggleBtn.dataset.profile = String(profileIndex);
+
+        toggleBtn.appendChild(icons.eye.cloneNode(true));
+        toggleBtn.addEventListener("click", togglePasswordVisibility);
+
+        inputWrapper.appendChild(toggleBtn);
+      }
+
+      const deleteFieldBtn = document.createElement("button");
+      deleteFieldBtn.className =
+        "flex justify-center items-center bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg delete-field size-10";
+      deleteFieldBtn.dataset.field = fieldName;
+      deleteFieldBtn.dataset.profile = String(profileIndex);
+
+      deleteFieldBtn.appendChild(icons.times.cloneNode(true));
+      deleteFieldBtn.addEventListener("click", deleteField);
+
+      row.append(labelCol, inputWrapper, deleteFieldBtn);
+      fieldsWrapper.appendChild(row);
+    });
+
+    /* FOOTER */
+    const footer = document.createElement("div");
+    footer.className = "bg-white px-6 py-4 border-t border-slate-200";
+
+    const footerGrid = document.createElement("div");
+    footerGrid.className = "grid grid-cols-[200px_1fr_auto] gap-3";
+
+    const newFieldName = document.createElement("input");
+    newFieldName.type = "text";
+    newFieldName.placeholder = "Nome do campo";
+    newFieldName.className = "new-field-name px-4 py-2 border border-slate-300 rounded-lg";
+    newFieldName.dataset.profile = String(profileIndex);
+
+    const newFieldValue = document.createElement("input");
+    newFieldValue.type = "text";
+    newFieldValue.placeholder = "Valor do campo";
+    newFieldValue.className = "new-field-value px-4 py-2 border border-slate-300 rounded-lg";
+    newFieldValue.dataset.profile = String(profileIndex);
+
+    const addFieldBtn = document.createElement("button");
+    addFieldBtn.className =
+      "bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 rounded-lg flex items-center gap-2 add-field-btn";
+    addFieldBtn.dataset.profile = String(profileIndex);
+    addFieldBtn.addEventListener("click", addField);
+
+    const addText = document.createElement("span");
+    addText.textContent = "Adicionar";
+
+    addFieldBtn.append(icons.plus.cloneNode(true), addText);
+
+    footerGrid.append(newFieldName, newFieldValue, addFieldBtn);
+    footer.appendChild(footerGrid);
+
+    card.append(header, fieldsWrapper, footer);
+    fragment.appendChild(card);
   });
 
-  // Event listeners para toggle de visualização de senha
-  document.querySelectorAll(".toggle-password").forEach((btn) => {
-    btn.addEventListener("click", togglePasswordVisibility);
-  });
-
-  // Event listeners para alteração de valores
-  document.querySelectorAll(".field-value").forEach((input) => {
-    input.addEventListener("change", updateFieldValue);
-  });
-
-  // Event listeners para exclusão de campos
-  document.querySelectorAll(".delete-field").forEach((btn) => {
-    btn.addEventListener("click", deleteField);
-  });
-
-  // Event listeners para adicionar campos
-  document.querySelectorAll(".add-field-btn").forEach((btn) => {
-    btn.addEventListener("click", addField);
-  });
-
-  // Event listeners para excluir perfil
-  document.querySelectorAll(".delete-profile").forEach((btn) => {
-    btn.addEventListener("click", deleteProfile);
-  });
+  container.appendChild(fragment);
 }
 
 function togglePasswordVisibility(e: Event): void {
@@ -396,7 +562,7 @@ function togglePasswordVisibility(e: Event): void {
   e.stopPropagation();
 
   const button = e.currentTarget as HTMLButtonElement;
-  const icon = button.querySelector("i");
+  const icon = button.querySelector("svg");
   const container = button.closest(".relative");
   const input = container?.querySelector(".field-value") as HTMLInputElement;
 
@@ -406,12 +572,10 @@ function togglePasswordVisibility(e: Event): void {
 
   if (input.type === "password") {
     input.type = "text";
-    icon.classList.remove("fa-eye");
-    icon.classList.add("fa-eye-slash");
+    icon.replaceWith(icons["eye-slash"].cloneNode(true));
   } else {
     input.type = "password";
-    icon.classList.remove("fa-eye-slash");
-    icon.classList.add("fa-eye");
+    icon.replaceWith(icons.eye.cloneNode(true));
   }
 }
 
@@ -460,7 +624,6 @@ async function updateFieldValue(e: Event): Promise<void> {
   if (!autofillData[currentSite]?.[profileIndex]) {
     console.error("Perfil não encontrado:", currentSite, profileIndex);
     await loadData();
-    renderProfiles();
     return;
   }
 
@@ -481,14 +644,14 @@ async function deleteField(e: Event): Promise<void> {
   if (!autofillData[currentSite]?.[profileIndex]) {
     console.error("Perfil não encontrado:", currentSite, profileIndex);
     await loadData();
-    renderProfiles();
     return;
   }
 
-  const confirmed = await showConfirm(`Excluir o campo "${fieldName}"?`, "Excluir campo", "fa-trash");
+  const confirmed = await showConfirm(`Excluir o campo "${fieldName}"?`, "Excluir campo", "trash");
   if (confirmed) {
     delete autofillData[currentSite][profileIndex].fields[fieldName];
     await browser.storage.local.set({ autofillData });
+    ToastService.success(`Campo "<b>${fieldName}</b>" excluído com sucesso.`);
     renderProfiles();
   }
 }
@@ -516,14 +679,13 @@ async function addField(e: Event): Promise<void> {
   const fieldValue = valueInput.value.trim();
 
   if (!fieldName) {
-    await showAlert("Digite o nome do campo", "Campo obrigatório", "fa-exclamation-circle", "warning");
+    await showAlert("Digite o nome do campo", "Campo obrigatório", "exclamation-circle", "warning");
     return;
   }
 
   if (!autofillData[currentSite]?.[profileIndex]) {
     console.error("Perfil não encontrado:", currentSite, profileIndex);
     await loadData();
-    renderProfiles();
     return;
   }
 
@@ -547,13 +709,12 @@ async function deleteProfile(e: Event): Promise<void> {
   if (!autofillData[currentSite]?.[profileIndex]) {
     console.error("Perfil não encontrado:", currentSite, profileIndex);
     await loadData();
-    renderProfiles();
     return;
   }
 
   const profileName = autofillData[currentSite][profileIndex].name;
 
-  const confirmed = await showConfirm(`Excluir o perfil "${profileName}"?`, "Excluir perfil", "fa-trash");
+  const confirmed = await showConfirm(`Excluir o perfil "${profileName}"?`, "Excluir perfil", "trash");
   if (confirmed) {
     autofillData[currentSite].splice(profileIndex, 1);
 
@@ -562,6 +723,7 @@ async function deleteProfile(e: Event): Promise<void> {
     Object.keys(autoFillSettings).forEach((key) => {
       if (key.startsWith(`${currentSite}_`)) {
         const idx = Number.parseInt(key.split("_").pop() || "", 10);
+
         if (idx > profileIndex) {
           // Decrementar o índice dos perfis que vêm depois
           oldSettings[`${currentSite}_${idx - 1}`] = autoFillSettings[key];
@@ -575,23 +737,24 @@ async function deleteProfile(e: Event): Promise<void> {
         oldSettings[key] = autoFillSettings[key];
       }
     });
+
     Object.assign(autoFillSettings, oldSettings);
 
     if (autofillData[currentSite].length === 0) {
       delete autofillData[currentSite];
+
+      ToastService.show("Nenhum perfil restante para este site. O site foi removido da lista.", "info");
+    } else {
+      ToastService.success(`Perfil "${profileName}" excluído com sucesso.`);
     }
 
     await browser.storage.local.set({ autofillData, autoFillSettings });
 
-    const emptyState = document.getElementById("empty-state");
-    const siteDetails = document.getElementById("site-details");
-
     if (!autofillData[currentSite]) {
-      if (siteDetails) siteDetails.style.display = "none";
-      if (emptyState) emptyState.style.display = "block";
+      showSite(false);
     }
 
-    renderSitesList();
+    await loadData();
   }
 }
 
@@ -613,26 +776,45 @@ function renderLinkedSites(): void {
   const linkedSites = siteLinks[currentSite] || [];
 
   if (linkedSites.length === 0) {
-    container.innerHTML =
-      '<p class="text-slate-400 text-sm mb-4 flex items-center gap-2"><i class="fas fa-info-circle"></i>Nenhum site vinculado</p>';
+    container.textContent = "";
+    const p = document.createElement("p");
+    const infoIcon = icons["info-circle"].cloneNode(true) as SVGSVGElement;
+    infoIcon.classList.remove("size-5", "flex-1", "text-white");
+    infoIcon.classList.add("size-3.5");
+    p.className = "text-slate-400 text-sm mb-4 flex items-center gap-2";
+    p.appendChild(infoIcon);
+    p.appendChild(document.createTextNode("Nenhum site vinculado"));
+    container.appendChild(p);
     return;
   }
 
-  container.innerHTML = linkedSites
-    .map(
-      (site) => `
-    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
-      <div class="flex items-center gap-2 text-slate-700">
-        <i class="fas fa-link text-blue-600"></i>
-        <span class="font-medium">${site}</span>
-      </div>
-      <button class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors duration-200 w-10 remove-link" data-site="${site}">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-  `,
-    )
-    .join("");
+  container.textContent = "";
+  linkedSites.forEach((site) => {
+    const div = document.createElement("div");
+    div.className = "flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200";
+
+    const leftDiv = document.createElement("div");
+    leftDiv.className = "flex items-center gap-2 text-slate-700";
+
+    const span = document.createElement("span");
+    span.className = "font-medium";
+    span.textContent = site;
+
+    leftDiv.appendChild(icons.link.cloneNode(true));
+    leftDiv.appendChild(span);
+
+    const button = document.createElement("button");
+    button.className =
+      "flex justify-center items-center bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors duration-200 size-10 remove-link";
+    button.dataset.site = site;
+
+    const btnIcon = icons.times.cloneNode(true);
+    button.appendChild(btnIcon);
+
+    div.appendChild(leftDiv);
+    div.appendChild(button);
+    container.appendChild(div);
+  });
 
   document.querySelectorAll(".remove-link").forEach((btn) => {
     btn.addEventListener("click", removeLinkedSite);
@@ -648,7 +830,7 @@ async function addLinkedSite(): Promise<void> {
   const url = input.value.trim();
 
   if (!url) {
-    await showAlert("Digite uma URL válida", "URL necessária", "fa-exclamation-circle", "warning");
+    await showAlert("Digite uma URL válida", "URL necessária", "exclamation-circle", "warning");
     return;
   }
 
@@ -657,7 +839,7 @@ async function addLinkedSite(): Promise<void> {
     const origin = urlObj.origin;
 
     if (origin === currentSite) {
-      await showAlert("Não é possível vincular o site a ele mesmo", "Operação inválida", "fa-ban", "error");
+      await showAlert("Não é possível vincular o site a ele mesmo", "Operação inválida", "ban", "danger");
       return;
     }
 
@@ -666,7 +848,7 @@ async function addLinkedSite(): Promise<void> {
     }
 
     if (siteLinks[currentSite].includes(origin)) {
-      await showAlert("Este site já está vinculado", "Site duplicado", "fa-exclamation-circle", "warning");
+      await showAlert("Este site já está vinculado", "Site duplicado", "exclamation-circle", "warning");
       return;
     }
 
@@ -676,7 +858,7 @@ async function addLinkedSite(): Promise<void> {
     input.value = "";
     renderLinkedSites();
   } catch {
-    await showAlert("URL inválida", "Erro de validação", "fa-times-circle", "error");
+    await showAlert("URL inválida", "Erro de validação", "times-circle", "danger");
   }
 }
 
@@ -688,7 +870,11 @@ async function removeLinkedSite(e: Event): Promise<void> {
     return;
   }
 
-  const confirmed = await showConfirm(`Remover vínculo com ${site}?`, "Remover vínculo", "fa-unlink");
+  const confirmed = await showConfirm(
+    `Remover vínculo:\n<span class="font-semibold">${site}</span>`,
+    "Remover vínculo",
+    "unlink"
+  );
   if (confirmed) {
     siteLinks[currentSite] = siteLinks[currentSite].filter((s) => s !== site);
 
@@ -708,7 +894,7 @@ async function exportData(): Promise<void> {
       "autofillData",
       "siteLinks",
       "autoFillSettings",
-      "showNotifications",
+      "showNotifications"
     ]);
 
     const exportObj: ExportData = {
@@ -718,8 +904,8 @@ async function exportData(): Promise<void> {
         autofillData: data.autofillData || {},
         siteLinks: data.siteLinks || {},
         autoFillSettings: data.autoFillSettings || {},
-        showNotifications: data.showNotifications,
-      },
+        showNotifications: data.showNotifications
+      }
     };
 
     const jsonString = JSON.stringify(exportObj, null, 2);
@@ -737,11 +923,11 @@ async function exportData(): Promise<void> {
     await showAlert(
       `Dados exportados com sucesso!\n<span class="font-semibold">${a.download}</span>`,
       "Exportação concluída",
-      "fa-check-circle",
-      "success",
+      "check-circle",
+      "success"
     );
   } catch {
-    await showAlert("Erro ao exportar dados", "Erro", "fa-times-circle", "error");
+    await showAlert("Erro ao exportar dados", "Erro", "times-circle", "danger");
   }
 }
 
@@ -765,7 +951,8 @@ async function importData(e: Event): Promise<void> {
     const confirmed = await showConfirm(
       "Isso substituirá todos os seus dados atuais. Deseja continuar?",
       "Confirmar importação",
-      "fa-exclamation-triangle",
+      "exclamation-triangle",
+      "warning"
     );
 
     if (!confirmed) {
@@ -778,17 +965,16 @@ async function importData(e: Event): Promise<void> {
       autofillData: importObj.data.autofillData || {},
       siteLinks: importObj.data.siteLinks || {},
       autoFillSettings: importObj.data.autoFillSettings || {},
-      showNotifications: importObj.data.showNotifications,
+      showNotifications: importObj.data.showNotifications
     });
 
     // Recarregar dados
     await loadData();
-    renderSitesList();
 
-    await showAlert("Dados importados com sucesso!", "Importação concluída", "fa-check-circle", "success");
+    await showAlert("Dados importados com sucesso!", "Importação concluída", "check-circle", "success");
   } catch (error) {
     console.error("Erro ao importar dados:", error);
-    await showAlert("Erro ao importar dados. Verifique se o arquivo é válido.", "Erro", "fa-times-circle", "error");
+    await showAlert("Erro ao importar dados. Verifique se o arquivo é válido.", "Erro", "times-circle", "danger");
   } finally {
     input.value = "";
   }

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* stylelint-disable scss/at-rule-no-unknown */
+@source inline("w-{1..12..1} h-{1..12..1} size-{1..12..1} gap-{1..20..1}");
+@source inline("space-x-{1..20..1} space-y-{1..20..1}");
+@source inline("size-3.{1..30..1}");
+
 @theme {
   --font-sans:
     "Instrument Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",

@@ -1,14 +1,12 @@
+import ToastService from "./services/toast-service";
 import type { AutofillData, SiteLinks } from "./types";
+import { createSvg } from "./utils/svg-util.js";
 
 let currentUrl: string = "";
-let messageTimeout: number | null = null;
-
-// biome-ignore lint/suspicious/noExplicitAny: any needed
-const extensionAPI = (globalThis as any).browser ?? (globalThis as any)?.chrome;
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Get current tab URL
-  const tabs = await extensionAPI.tabs.query({ active: true, currentWindow: true });
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tabs[0]?.url) {
     return;
   }
@@ -16,7 +14,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   currentUrl = new URL(tabs[0].url).origin;
 
   const currentSiteElement = document.getElementById("current-site");
+
   if (currentSiteElement) {
+    if (currentUrl === "null" || !currentUrl.startsWith("http")) {
+      currentUrl = "(não disponível)";
+    }
+
     currentSiteElement.textContent = `Site atual: ${currentUrl}`;
   }
 
@@ -31,21 +34,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (optionsBtn) {
     optionsBtn.addEventListener("click", async () => {
-      await extensionAPI.windows.create({
-        url: extensionAPI.runtime.getURL("options.html"),
+      await browser.windows.create({
+        url: browser.runtime.getURL("options.html"),
         type: "popup",
-        focused: true,
+        focused: true
       });
     });
   }
 });
 
 async function loadProfiles(): Promise<void> {
-  const data = await extensionAPI.storage.local.get("autofillData");
+  const data = await browser.storage.local.get("autofillData");
   const autofillData: AutofillData = data.autofillData || {};
 
   // Verificar links de sites
-  const links = await extensionAPI.storage.local.get("siteLinks");
+  const links = await browser.storage.local.get("siteLinks");
   const siteLinks: SiteLinks = links.siteLinks || {};
 
   // Encontrar o site principal ou sites vinculados
@@ -65,37 +68,76 @@ async function loadProfiles(): Promise<void> {
   }
 
   if (siteData.length === 0) {
-    profilesList.innerHTML = `
-      <div class="text-center py-8 bg-white rounded-xl shadow-sm mx-2">
-        <i class="fas fa-clipboard text-4xl text-slate-300 mb-3"></i>
-        <p class="text-slate-500 text-sm">Nenhum preenchimento salvo para este site</p>
-      </div>
-    `;
+    profilesList.textContent = "";
+    const div = document.createElement("div");
+    div.className = "flex flex-col text-center py-8 bg-white rounded-xl shadow-sm mx-2";
+
+    const icon = createSvg("clipboard", ["h-9.25", "text-slate-300", "mb-3"], [384, 512]);
+
+    const p = document.createElement("p");
+    p.className = "text-slate-500 text-sm";
+    p.textContent = "Nenhum preenchimento salvo para este site";
+
+    div.appendChild(icon);
+    div.appendChild(p);
+    profilesList.appendChild(div);
     return;
   }
 
-  profilesList.innerHTML = siteData
-    .map(
-      (profile, index) => `
-    <div class="profile-card-item bg-white hover:bg-blue-50 border-2 border-transparent hover:border-blue-500 rounded-xl shadow-sm p-4 cursor-pointer transition-all duration-200 transform hover:scale-[1.02] group mx-2" data-index="${index}">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="bg-blue-100 group-hover:bg-blue-600 p-2 rounded-lg transition-colors">
-            <i class="fas fa-user text-blue-600 group-hover:text-white transition-colors"></i>
-          </div>
-          <div>
-            <div class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">${profile.name || `Perfil ${index + 1}`}</div>
-            <div class="text-xs text-slate-500">
-              <i class="fas fa-list-check mr-1"></i>${Object.keys(profile.fields).length} campos
-            </div>
-          </div>
-        </div>
-        <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-600 transition-colors"></i>
-      </div>
-    </div>
-  `,
-    )
-    .join("");
+  profilesList.textContent = "";
+  siteData.forEach((profile, index) => {
+    const card = document.createElement("div");
+    card.className =
+      "profile-card-item bg-white hover:bg-blue-50 border-2 border-transparent hover:border-blue-500 rounded-xl shadow-sm p-4 cursor-pointer transition-all duration-200 transform hover:scale-[1.02] group mx-2";
+    card.dataset.index = String(index);
+
+    const flexDiv = document.createElement("div");
+    flexDiv.className = "flex items-center justify-between";
+
+    const leftDiv = document.createElement("div");
+    leftDiv.className = "flex items-center gap-3";
+
+    const iconWrapper = document.createElement("div");
+    iconWrapper.className = "bg-blue-100 group-hover:bg-blue-600 px-2 py-3 rounded-lg transition-colors";
+    const userIcon = createSvg(
+      "user",
+      ["h-4", "text-blue-600", "group-hover:text-white", "transition-colors"],
+      [448, 512]
+    );
+    iconWrapper.appendChild(userIcon);
+
+    const textDiv = document.createElement("div");
+
+    const nameDiv = document.createElement("div");
+    nameDiv.className = "font-semibold text-slate-800 group-hover:text-blue-600 transition-colors";
+    nameDiv.textContent = profile.name || `Perfil ${index + 1}`;
+
+    const fieldsCount = Object.keys(profile.fields).length;
+    const fieldsCountSpan = document.createElement("span");
+    fieldsCountSpan.textContent = `${fieldsCount} campo${fieldsCount !== 1 ? "s" : ""}`;
+
+    const statsDiv = document.createElement("div");
+    statsDiv.className = "flex items-center text-xs text-slate-500 gap-1";
+    const statsIcon = createSvg("list-check", "size-3.25");
+    statsDiv.appendChild(statsIcon);
+    statsDiv.appendChild(fieldsCountSpan);
+
+    textDiv.appendChild(nameDiv);
+    textDiv.appendChild(statsDiv);
+    leftDiv.appendChild(iconWrapper);
+    leftDiv.appendChild(textDiv);
+
+    const chevron = createSvg(
+      "chevron-right",
+      ["text-slate-300", "group-hover:text-blue-600", "transition-colors"],
+      [320, 512]
+    );
+
+    flexDiv.appendChild(leftDiv);
+    flexDiv.appendChild(chevron);
+    card.appendChild(flexDiv);
+    profilesList.appendChild(card);
+  });
 
   document.querySelectorAll(".profile-card-item").forEach((item) => {
     item.addEventListener("click", () => {
@@ -108,11 +150,11 @@ async function loadProfiles(): Promise<void> {
 }
 
 async function fillForm(profileIndex: number): Promise<void> {
-  const data = await extensionAPI.storage.local.get("autofillData");
+  const data = await browser.storage.local.get("autofillData");
   const autofillData: AutofillData = data.autofillData || {};
 
   // Verificar links de sites
-  const links = await extensionAPI.storage.local.get("siteLinks");
+  const links = await browser.storage.local.get("siteLinks");
   const siteLinks: SiteLinks = links.siteLinks || {};
 
   let siteData = autofillData[currentUrl] || [];
@@ -126,34 +168,34 @@ async function fillForm(profileIndex: number): Promise<void> {
 
   const profile = siteData[profileIndex];
 
-  const tabs = await extensionAPI.tabs.query({ active: true, currentWindow: true });
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   if (tabs[0].id) {
-    await extensionAPI.tabs.sendMessage(tabs[0].id, {
+    await browser.tabs.sendMessage(tabs[0].id, {
       action: "fill",
-      fields: profile.fields,
+      fields: profile.fields
     });
   }
 
-  showMessage("Formulário preenchido com sucesso!", "success");
+  ToastService.success("Formulário preenchido com sucesso!");
 }
 
 async function captureForm(): Promise<void> {
-  const tabs = await extensionAPI.tabs.query({ active: true, currentWindow: true });
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
 
   try {
     if (!tabs[0].id) {
       return;
     }
 
-    const response = await extensionAPI.tabs.sendMessage(tabs[0].id, {
-      action: "capture",
+    const response = await browser.tabs.sendMessage(tabs[0].id, {
+      action: "capture"
     });
 
     if (response?.fields && Object.keys(response.fields).length > 0) {
       const profileName = prompt("Nome deste preenchimento:", `Perfil ${new Date().toLocaleString("pt-BR")}`);
 
       if (profileName) {
-        const data = await extensionAPI.storage.local.get("autofillData");
+        const data = await browser.storage.local.get("autofillData");
         const autofillData: AutofillData = data.autofillData || {};
 
         if (!autofillData[currentUrl]) {
@@ -164,49 +206,21 @@ async function captureForm(): Promise<void> {
           name: profileName,
           fields: response.fields,
           url: response.url,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
         });
 
-        await extensionAPI.storage.local.set({ autofillData });
+        await browser.storage.local.set({ autofillData });
 
-        showMessage("Preenchimento capturado com sucesso!", "success");
+        ToastService.success("Preenchimento capturado com sucesso!");
+
         loadProfiles();
       }
     } else {
-      showMessage("Nenhum campo de formulário encontrado na página", "error");
+      ToastService.warn("Nenhum campo de formulário encontrado na página");
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-    showMessage(`Erro ao capturar formulário:  ${errorMessage}`, "error");
+
+    ToastService.error(`Erro ao capturar formulário:  ${errorMessage}`);
   }
-}
-
-function showMessage(text: string, type: "success" | "error"): void {
-  const messageEl = document.getElementById("message");
-  if (!messageEl) {
-    return;
-  }
-
-  const isSuccess = type === "success";
-  const icon = isSuccess ? "fa-circle-check" : "fa-circle-exclamation";
-  const bgColor = isSuccess ? "bg-green-50" : "bg-red-50";
-  const borderColor = isSuccess ? "border-green-500" : "border-red-500";
-  const textColor = isSuccess ? "text-green-800" : "text-red-800";
-  const iconColor = isSuccess ? "text-green-600" : "text-red-600";
-
-  messageEl.innerHTML = `
-    <div class="${bgColor} ${textColor} ${borderColor} border-l-4 rounded-lg p-4 shadow-sm flex items-center gap-3">
-      <i class="fas ${icon} ${iconColor} text-xl"></i>
-      <span class="font-medium">${text}</span>
-    </div>
-  `;
-  messageEl.classList.remove("hidden");
-
-  if (messageTimeout !== null) {
-    clearTimeout(messageTimeout);
-  }
-
-  messageTimeout = window.setTimeout(() => {
-    messageEl.classList.add("hidden");
-  }, 3000);
 }
