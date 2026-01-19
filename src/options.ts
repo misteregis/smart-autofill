@@ -206,6 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     closeBtn.addEventListener("click", closeLinkModal);
   }
 
+  window.addEventListener("hashchange", () => selectSite());
   window.addEventListener("focus", async () => {
     await loadData();
 
@@ -345,7 +346,7 @@ function renderSitesList(): void {
           return;
         }
 
-        selectSite(site);
+        updateHash(site);
       }
     });
   });
@@ -353,25 +354,36 @@ function renderSitesList(): void {
   selectSite();
 }
 
+function updateHash(site: string): void {
+  window.location.hash = site ? `#${site}` : "";
+}
+
 function showSite(show: boolean): void {
   if (emptyState) emptyState.style.display = show ? "none" : "block";
   if (siteDetails) siteDetails.style.display = show ? "block" : "none";
 }
 
-function selectSite(site: string | null = currentSite): void {
-  if (!site) {
+function selectSite(site: string | null = null): void {
+  const hashSite = window.location.hash.slice(1);
+
+  if (!hashSite || !(hashSite in autofillData)) {
     return;
   }
 
-  currentSite = site;
+  if (site && site !== currentSite) {
+    updateHash(site);
+    return;
+  }
+
+  currentSite = hashSite;
 
   const siteName = document.getElementById("site-name");
 
   showSite(true);
 
-  if (siteName) siteName.textContent = site;
+  if (siteName) siteName.textContent = hashSite;
 
-  const item = document.querySelector(`[data-site="${site}"]`);
+  const item = document.querySelector(`[data-site="${hashSite}"]`);
   document.querySelectorAll(".site-item-card").forEach((i) => {
     i.classList.remove("!bg-blue-100", "!border-blue-600", "active");
   });

@@ -34,8 +34,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (optionsBtn) {
     optionsBtn.addEventListener("click", async () => {
+      const site = currentUrl !== "(não disponível)" ? `#${encodeURIComponent(currentUrl)}` : "";
+      // browser.runtime.openOptionsPage();
       await browser.windows.create({
-        url: browser.runtime.getURL("options.html"),
+        url: browser.runtime.getURL(`options.html${decodeURIComponent(site)}`),
         type: "popup",
         focused: true
       });
