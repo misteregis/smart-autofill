@@ -564,6 +564,8 @@ function renderProfiles(): void {
 
     card.append(header, fieldsWrapper, footer);
     fragment.appendChild(card);
+
+    enterKeyListener("enter", [newFieldName, newFieldValue],  () => addFieldBtn.click());
   });
 
   container.appendChild(fragment);
@@ -674,6 +676,7 @@ async function addField(e: Event): Promise<void> {
 
   if (Number.isNaN(profileIndex) || !currentSite) {
     console.error("Índice de perfil inválido");
+    ToastService.error("Erro ao adicionar campo. Tente novamente.");
     return;
   }
 
@@ -681,6 +684,7 @@ async function addField(e: Event): Promise<void> {
 
   if (!card) {
     console.error("Card do perfil não encontrado");
+    ToastService.error("Erro ao adicionar campo. Tente novamente.");
     return;
   }
 
@@ -697,16 +701,24 @@ async function addField(e: Event): Promise<void> {
 
   if (!autofillData[currentSite]?.[profileIndex]) {
     console.error("Perfil não encontrado:", currentSite, profileIndex);
+    ToastService.error("Erro ao adicionar campo. Tente novamente.");
     await loadData();
     return;
   }
 
-  autofillData[currentSite][profileIndex].fields[fieldName] = fieldValue;
-  await browser.storage.local.set({ autofillData });
+  if (fieldName in autofillData[currentSite][profileIndex].fields) {
+    ToastService.warn(`O campo "<b>${fieldName}</b>" já existe neste perfil.`);
+  } else {
+    autofillData[currentSite][profileIndex].fields[fieldName] = fieldValue;
+    await browser.storage.local.set({ autofillData });
+
+    ToastService.success(`Campo "<b>${fieldName}</b>" adicionado com sucesso.`);
+
+    renderProfiles();
+  }
 
   nameInput.value = "";
   valueInput.value = "";
-  renderProfiles();
 }
 
 async function deleteProfile(e: Event): Promise<void> {

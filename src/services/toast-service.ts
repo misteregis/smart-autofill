@@ -5,7 +5,6 @@ const ToastService = (() => {
   const activeToasts = new Map();
   const ANIMATION_RESET_DELAY = 50;
   const MAX_TOASTS = 5;
-  const icons: Record<string, HTMLElement> = {};
 
   const typeClasses = {
     success: "bg-green-50 text-green-800 border-green-500",
@@ -106,14 +105,12 @@ const ToastService = (() => {
                 ${typeClasses[type] ?? typeClasses.info}
             `.trim();
 
-      if (Object.keys(icons).length === 0) {
-        Object.assign(icons, {
-          success: createSvg("circle-check", "size-5 text-green-600", [640, 640]),
-          error: createSvg("circle-exclamation", "size-5 text-red-600", [640, 640]),
-          warn: createSvg("triangle-exclamation", "size-5 text-amber-600", [640, 640]),
-          info: createSvg("info-circle", "size-5 text-white", [640, 640], null)
-        });
-      }
+      const icons = {
+        success: createSvg("circle-check", "size-5 text-green-600", [640, 640]),
+        error: createSvg("circle-exclamation", "size-5 text-red-600", [640, 640]),
+        warn: createSvg("triangle-exclamation", "size-5 text-amber-600", [640, 640]),
+        info: createSvg("info-circle", "size-5 text-white", [640, 640], null)
+      };
 
       toast.addEventListener("click", () => removeToast(key));
       toast.appendChild(icons[type]);
