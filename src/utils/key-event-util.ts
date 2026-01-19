@@ -8,7 +8,11 @@ const addKeypressListener = (type: string, key: string, element: HTMLElement, ca
   });
 };
 
-const enterKeyListener = (eventKey: EventKey, targetElement: HTMLElement[] | HTMLElement | null, callback: () => void): void => {
+const enterKeyListener = (
+  eventKey: EventKey,
+  targetElement: HTMLElement[] | HTMLElement | null,
+  callback: () => void
+): void => {
   if (targetElement && typeof callback === "function") {
     if (Array.isArray(targetElement)) {
       targetElement.forEach((element) => {

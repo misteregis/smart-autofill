@@ -13,11 +13,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   currentUrl = new URL(tabs[0].url).origin;
 
+  // biome-ignore lint/suspicious/noExplicitAny: needed for button element
+  const captureBtn = document.getElementById("capture-btn") as any;
   const currentSiteElement = document.getElementById("current-site");
 
   if (currentSiteElement) {
     if (currentUrl === "null" || !currentUrl.startsWith("http")) {
       currentUrl = "(não disponível)";
+      captureBtn.disabled = true;
+      captureBtn._disabled = true;
     }
 
     currentSiteElement.textContent = `Site atual: ${currentUrl}`;
@@ -25,11 +29,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   loadProfiles();
 
-  const captureBtn = document.getElementById("capture-btn");
   const optionsBtn = document.getElementById("options-btn");
 
   if (captureBtn) {
-    captureBtn.addEventListener("click", captureForm);
+    captureBtn.addEventListener("click", () => captureForm(captureBtn));
   }
 
   if (optionsBtn) {
@@ -181,7 +184,13 @@ async function fillForm(profileIndex: number): Promise<void> {
   ToastService.success("Formulário preenchido com sucesso!");
 }
 
-async function captureForm(): Promise<void> {
+// biome-ignore lint/suspicious/noExplicitAny: needed for button element
+async function captureForm(btn: any): Promise<void> {
+  if (btn._disabled) {
+    btn.disabled = true;
+    return;
+  }
+
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
 
   try {

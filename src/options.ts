@@ -136,7 +136,7 @@ function showAlert(
 // Função para mostrar modal de confirmação customizado
 function showConfirm(
   message: string,
-  title = "Aviso",
+  title = "AvisoX",
   icon: IconType = "info-circle",
   type: ModalType = "danger"
 ): Promise<boolean> {
@@ -565,7 +565,7 @@ function renderProfiles(): void {
     card.append(header, fieldsWrapper, footer);
     fragment.appendChild(card);
 
-    enterKeyListener("enter", [newFieldName, newFieldValue],  () => addFieldBtn.click());
+    enterKeyListener("enter", [newFieldName, newFieldValue], () => addFieldBtn.click());
   });
 
   container.appendChild(fragment);

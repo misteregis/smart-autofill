@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
+    "outDir": "./build",
     "rootDir": "./src",
     "isolatedModules": true,
     "removeComments": false
@@ -17,6 +17,7 @@
   ],
   "exclude": [
     "node_modules",
+    "build",
     "dist",
     "src/**/*.d.ts"
   ]

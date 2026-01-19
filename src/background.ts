@@ -38,8 +38,10 @@ browser.contextMenus.create({
 browser.tabs.onActivated.addListener(async (activeInfo) => {
   const tab = await browser.tabs.get(activeInfo.tabId);
 
-  if (tab.url?.startsWith("http")) {
+  if (tab.url && /^https?:\/\//.test(tab.url ?? "")) {
     await updateMenusForUrl(tab.url);
+  } else {
+    await browser.browserAction.setBadgeText({ text: "" });
   }
 });
 
@@ -220,7 +222,7 @@ async function captureAndCreateProfile(tab: browser.tabs.Tab): Promise<void> {
       type: "basic",
       iconUrl: "icons/icon-48.png",
       title: "Smart Autofill - Erro",
-      message: "Erro ao capturar formulário. Verifique se a página tem campos preenchidos."
+      message: "Erro ao capturar formulário. Verifique se a página contém campos preenchidos."
     });
   }
 }

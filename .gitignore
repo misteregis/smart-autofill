@@ -1,4 +1,5 @@
 # Ignore directory except .gitkeep
+build/*
 dist/*
 !dist/.gitkeep
 web-ext-artifacts/*
