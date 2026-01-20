@@ -1,8 +1,14 @@
 {
   "manifest_version": 2,
   "name": "Smart Autofill",
-  "version": "1.0.0",
-  "description": "Extensão de autopreenchimento inteligente de formulários",
+  "version": "0.1.1",
+  "description": "Capture, salve e preencha automaticamente formulários web. Suporta múltiplos perfis, preenchimento automático ao carregar, vinculação de sites e backup de dados.",
+  "author": "@misteregis",
+  "homepage_url": "https://github.com/misteregis/smart-autofill",
+  "developer": {
+    "name": "@misteregis",
+    "url": "https://github.com/misteregis"
+  },
   "content_security_policy": "script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'self'",
   "permissions": [
     "storage",

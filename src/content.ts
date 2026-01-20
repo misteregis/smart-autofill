@@ -65,12 +65,42 @@ browser.runtime.onMessage.addListener((message: Message, _sender, sendResponse) 
 function captureFormData(): Record<string, string> {
   const fields: Record<string, string> = {};
 
+  // Função auxiliar para verificar se um elemento está visível
+  function isVisible(element: HTMLElement): boolean {
+    // Verificar se o elemento tem dimensões
+    if (element.offsetWidth === 0 || element.offsetHeight === 0) {
+      return false;
+    }
+
+    // Verificar estilos computados
+    const style = window.getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") {
+      return false;
+    }
+
+    // Verificar se algum elemento pai está oculto
+    let parent = element.parentElement;
+    while (parent) {
+      const parentStyle = window.getComputedStyle(parent);
+      if (parentStyle.display === "none" || parentStyle.visibility === "hidden") {
+        return false;
+      }
+      parent = parent.parentElement;
+    }
+
+    return true;
+  }
+
   // Capturar inputs, textareas e selects
   const inputs = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
     'input:not([type="submit"]):not([type="button"]):not([type="image"]), textarea, select'
   );
 
   inputs.forEach((input) => {
+    if (!isVisible(input)) {
+      return;
+    }
+
     let identifier = "";
 
     if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {

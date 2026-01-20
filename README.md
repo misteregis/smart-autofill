@@ -271,7 +271,12 @@ Contribuições são bem-vindas! Sinta-se à vontade para:
 
 ## 📝 Changelog
 
-### v1.0.0 (Janeiro 2026)
+### v0.1.1 (Janeiro 2026)
+- 🐛 Corrigir captura de campos ocultos - agora captura apenas campos visíveis
+- 📝 Melhorar mensagens de erro quando não há campos preenchidos
+- ✨ Aprimoramentos gerais de usabilidade
+
+### v0.1.0 (Janeiro 2026)
 - 🎉 Lançamento inicial
 - ✨ Captura e preenchimento de formulários
 - ⚡ Preenchimento automático ao carregar página

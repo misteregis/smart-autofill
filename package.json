@@ -1,8 +1,8 @@
 {
   "name": "smart-autofill",
   "type": "module",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.1",
+  "description": "Extensão inteligente para Firefox que captura, salva e preenche automaticamente formulários web. Suporta múltiplos perfis, preenchimento automático, vinculação de sites e backup de dados.",
   "main": "dist/background.js",
   "scripts": {
     "build": "tsc && node build-bundle.js --verbose && pnpm build:css",
@@ -23,8 +23,17 @@
     "type": "git",
     "url": "git+https://github.com/misteregis/smart-autofill.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "firefox",
+    "extension",
+    "autofill",
+    "form-filler",
+    "automation",
+    "webextension",
+    "browser-extension",
+    "typescript"
+  ],
+  "author": "@misteregis",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/misteregis/smart-autofill/issues"
