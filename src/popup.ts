@@ -227,7 +227,7 @@ async function captureForm(btn: any): Promise<void> {
         loadProfiles();
       }
     } else {
-      ToastService.warn("Nenhum campo de formulário encontrado na página");
+      ToastService.warn("Nenhum campo preenchido encontrado! Preencha os campos antes de capturar.");
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";

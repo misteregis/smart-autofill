@@ -188,7 +188,7 @@ async function captureAndCreateProfile(tab: browser.tabs.Tab): Promise<void> {
         type: "basic",
         iconUrl: "icons/icon-48.png",
         title: "Smart Autofill",
-        message: "Nenhum campo encontrado na página!"
+        message: "Nenhum campo preenchido encontrado! Por favor, preencha os campos do formulário antes de capturar."
       });
       return;
     }
