@@ -922,7 +922,7 @@ async function exportData(): Promise<void> {
     ]);
 
     const exportObj: ExportData = {
-      version: "0.1.1",
+      version: "0.1.2",
       exportDate: new Date().toISOString(),
       data: {
         autofillData: data.autofillData || {},

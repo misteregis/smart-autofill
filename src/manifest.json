@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Smart Autofill",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Capture, salve e preencha automaticamente formulários web. Suporta múltiplos perfis, preenchimento automático ao carregar, vinculação de sites e backup de dados.",
   "author": "@misteregis",
   "homepage_url": "https://github.com/misteregis/smart-autofill",
@@ -22,16 +22,12 @@
     "gecko": {
       "id": "smart-autofill@misteregis.github",
       "data_collection_permissions": {
-        "required": [
-          "websiteActivity"
-        ]
+        "required": ["websiteActivity"]
       }
     }
   },
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "scripts": ["background.js"]
   },
   "browser_action": {
     "default_popup": "popup.html",
@@ -47,12 +43,8 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ]
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
     }
   ],
   "icons": {

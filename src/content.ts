@@ -104,9 +104,9 @@ function captureFormData(): Record<string, string> {
     let identifier = "";
 
     if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
-      identifier = input.name || input.id || input.placeholder || input.type;
+      identifier = input.id || input.name || input.placeholder || input.type;
     } else if (input instanceof HTMLSelectElement) {
-      identifier = input.name || input.id;
+      identifier = input.id || input.name;
     }
 
     if (!identifier || identifier === "submit" || identifier === "button") {

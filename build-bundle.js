@@ -122,6 +122,40 @@ function updateHtmlReferences(newBundleName) {
   }
 }
 
+// Função para atualizar versão nos arquivos HTML
+function updateVersionInHtml() {
+  const packageJsonPath = path.join(process.cwd(), "package.json");
+
+  if (!fs.existsSync(packageJsonPath)) {
+    console.warn("package.json não encontrado, versão não será atualizada");
+    return;
+  }
+
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+  const version = packageJson.version;
+
+  if (!version) {
+    console.warn("Versão não encontrada no package.json");
+    return;
+  }
+
+  const htmlFiles = fs.readdirSync(DIST_PATH).filter((f) => f.endsWith(".html"));
+
+  for (const htmlFile of htmlFiles) {
+    const htmlPath = path.join(DIST_PATH, htmlFile);
+    let htmlContent = fs.readFileSync(htmlPath, "utf-8");
+
+    // Substitui versão no formato v0.0.0 ou v1.0.0 etc
+    htmlContent = htmlContent.replace(/v\d+\.\d+\.\d+/g, `v${version}`);
+
+    fs.writeFileSync(htmlPath, htmlContent);
+  }
+
+  if (verbose) {
+    console.log(`Versão atualizada para v${version} nos arquivos HTML`);
+  }
+}
+
 // Função para atualizar referências ao content.js e background.js no manifest.json
 function updateManifestReferences(fileMap) {
   const manifestPath = path.join(DIST_PATH, "manifest.json");
@@ -246,6 +280,9 @@ async function build() {
     if (Object.keys(fileMap).length > 0) {
       updateManifestReferences(fileMap);
     }
+
+    // Atualiza versão nos arquivos HTML
+    updateVersionInHtml();
   } catch (error) {
     if (verbose) {
       console.error("Error while building:", error);

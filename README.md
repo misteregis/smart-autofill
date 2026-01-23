@@ -271,6 +271,12 @@ Contribuições são bem-vindas! Sinta-se à vontade para:
 
 ## 📝 Changelog
 
+### v0.1.2 (Janeiro 2026)
+- Atualizada a versão para 0.1.2.
+- Adicionada função para atualizar a versão nos arquivos HTML durante o processo de build.
+- Melhorias na captura de dados de formulários, alterando a ordem de prioridade dos identificadores.
+- Correções de bugs e melhorias de desempenho.
+
 ### v0.1.1 (Janeiro 2026)
 - 🐛 Corrigir captura de campos ocultos - agora captura apenas campos visíveis
 - 📝 Melhorar mensagens de erro quando não há campos preenchidos
