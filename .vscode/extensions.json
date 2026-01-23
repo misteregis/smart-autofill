@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}
