@@ -34,6 +34,7 @@ const icons: Record<IconType, SVGElement> = {
   globe: createSvg("globe", ["text-slate-400", "group-hover:text-blue-600", "mt-1", "transition-colors"]),
   inbox: createSvg("inbox", "size-3.75", [640, 640]),
   link: createSvg("link", ["text-blue-600", "w-4.5", "h-4"], [640, 640]),
+  pen: createSvg("pen", "size-3.5", [640, 640]),
   plus: createSvg("plus", [], [640, 640]),
   tag: createSvg("tag", "size-3.5 text-slate-400", [640, 640]),
   times: createSvg("times", [], [640, 640]),
@@ -392,6 +393,13 @@ function selectSite(site: string | null = null): void {
   renderProfiles();
 }
 
+async function renameProfile(profile: AutofillProfile, newName: string): Promise<void> {
+  profile.name = newName;
+
+  await browser.storage.local.set({ autofillData });
+  await loadData();
+}
+
 function renderProfiles(): void {
   const container = document.getElementById("profiles-container");
 
@@ -425,9 +433,25 @@ function renderProfiles(): void {
 
     const info = document.createElement("div");
 
-    const title = document.createElement("h3");
-    title.className = "text-lg font-semibold text-slate-800";
-    title.textContent = profile.name;
+    const headerTitle = document.createElement("span");
+    headerTitle.className = "text-lg font-semibold text-slate-800";
+    headerTitle.textContent = profile.name;
+
+    const headerEditButton = document.createElement("button");
+    headerEditButton.type = "button";
+    headerEditButton.className = "text-slate-400 hover:text-blue-600";
+    headerEditButton.appendChild(icons.pen.cloneNode(true));
+    headerEditButton.addEventListener("click", () => {
+      const newName = prompt("Digite o novo nome do perfil:", profile.name);
+      if (newName && newName.trim() !== "") {
+        renameProfile(profile, newName.trim());
+      }
+    });
+
+    const headerContainer = document.createElement("h3");
+    headerContainer.className = "flex items-center gap-2";
+    headerContainer.appendChild(headerTitle);
+    headerContainer.appendChild(headerEditButton);
 
     const label = document.createElement("label");
     label.className = "flex items-center gap-2 mt-2 cursor-pointer group";
@@ -450,7 +474,7 @@ function renderProfiles(): void {
     labelText.append(boltIcon, textFill);
 
     label.append(checkbox, labelText);
-    info.append(title, label);
+    info.append(headerContainer, label);
     left.append(iconBox, info);
 
     const deleteProfileBtn = document.createElement("button");

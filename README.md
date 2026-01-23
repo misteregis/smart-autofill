@@ -25,6 +25,8 @@
 - **Interface Moderna**: Design responsivo com Tailwind CSS
 - **Gerenciamento Visual**: Interface completa para gerenciar sites, perfis e configurações
 - **TypeScript**: Código totalmente tipado para maior confiabilidade
+- **Renomeação de Perfis**: Renomeie perfis salvos diretamente na interface de opções
+- **Atualização Automática de Versão**: A versão é atualizada automaticamente nos arquivos HTML durante o build
 
 ## 📦 Instalação
 
@@ -88,7 +90,14 @@ pnpm web:build
 1. Clique com o botão direito em qualquer campo
 2. Selecione "Smart Autofill" → perfil desejado
 
-### 3️⃣ Preenchimento Automático
+### 3️⃣ Renomeando um Perfil
+
+1. Clique no ícone do Smart Autofill e vá em "Configurações"
+2. Selecione o site na lista à esquerda
+3. Clique no ícone de edição (✏️) ao lado do nome do perfil
+4. Digite o novo nome e confirme
+
+### 4️⃣ Preenchimento Automático
 
 1. Clique no ícone do Smart Autofill e vá em "Configurações"
 2. Selecione o site na lista à esquerda
@@ -97,7 +106,7 @@ pnpm web:build
 
 > **Nota:** Apenas um perfil por site pode ter preenchimento automático ativo.
 
-### 4️⃣ Vinculando Sites
+### 5️⃣ Vinculando Sites
 
 Útil para compartilhar perfis entre ambientes relacionados (ex: `localhost`, `staging`, `production`):
 
@@ -107,15 +116,15 @@ pnpm web:build
 4. Digite a URL do site relacionado
 5. Clique em "Adicionar"
 
-### 5️⃣ Gerenciando Perfis
+### 6️⃣ Gerenciando Perfis
 
 Na página de configurações você pode:
-- **Editar**: Modificar nome e campos de um perfil
-- **Renomear**: Alterar apenas o nome do perfil
+- **Editar**: Modificar campos de um perfil
+- **Renomear**: Alterar o nome do perfil (veja a seção "Renomeando um Perfil")
 - **Excluir**: Remover perfis individuais
 - **Visualizar**: Ver todos os campos salvos com opção de mostrar/ocultar valores
 
-### 6️⃣ Importar/Exportar Dados
+### 7️⃣ Importar/Exportar Dados
 
 **Exportar:**
 1. Vá em "Configurações"
@@ -144,6 +153,9 @@ pnpm watch
 
 # Executar extensão em modo desenvolvimento
 pnpm web:run
+
+# Executar extensão em modo desenvolvimento com devtools
+pnpm web:run:dev
 
 # Criar pacote .xpi para distribuição
 pnpm web:build

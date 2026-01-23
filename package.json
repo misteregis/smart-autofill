@@ -17,6 +17,7 @@
     "check": "biome check --write",
     "web:build": "pnpm build && web-ext build --source-dir=dist --overwrite-dest --artifacts-dir=web-ext-artifacts",
     "web:run": "web-ext run --watch-files --source-dir=dist --keep-profile-changes --reload --firefox-profile ./web-ext-profile",
+    "web:run:dev": "pnpm web:run --devtools",
     "web:lint": "web-ext lint --source-dir=dist"
   },
   "repository": {

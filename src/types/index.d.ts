@@ -63,6 +63,7 @@ export type IconType =
   | "inbox"
   | "info-circle"
   | "link"
+  | "pen"
   | "plus"
   | "tag"
   | "times"
