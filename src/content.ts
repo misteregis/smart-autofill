@@ -91,6 +91,28 @@ function captureFormData(): Record<string, string> {
     return true;
   }
 
+  // Função auxiliar para obter o identificador de um elemento
+  function getElementIdentifier(input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): string {
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+      return input.id || input.name || input.placeholder || input.type;
+    }
+    if (input instanceof HTMLSelectElement) {
+      return input.id || input.name;
+    }
+    return "";
+  }
+
+  // Função auxiliar para obter o valor de um elemento
+  function getElementValue(input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): string {
+    if (input instanceof HTMLInputElement && (input.type === "checkbox" || input.type === "radio")) {
+      return input.checked ? input.value : "";
+    }
+    if (input instanceof HTMLSelectElement) {
+      return input.options[input.selectedIndex]?.value || "";
+    }
+    return input.value;
+  }
+
   // Capturar inputs, textareas e selects
   const inputs = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
     'input:not([type="submit"]):not([type="button"]):not([type="image"]), textarea, select'
@@ -101,27 +123,13 @@ function captureFormData(): Record<string, string> {
       return;
     }
 
-    let identifier = "";
-
-    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
-      identifier = input.id || input.name || input.placeholder || input.type;
-    } else if (input instanceof HTMLSelectElement) {
-      identifier = input.id || input.name;
-    }
+    const identifier = getElementIdentifier(input);
 
     if (!identifier || identifier === "submit" || identifier === "button") {
       return;
     }
 
-    let value = "";
-
-    if (input instanceof HTMLInputElement && (input.type === "checkbox" || input.type === "radio")) {
-      value = input.checked ? input.value : "";
-    } else if (input instanceof HTMLSelectElement) {
-      value = input.options[input.selectedIndex]?.value || "";
-    } else {
-      value = input.value;
-    }
+    const value = getElementValue(input);
 
     if (value) {
       // Criar um identificador único
